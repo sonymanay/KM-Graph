@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Future Vision — Self-Evolving Knowledge System (Concept Prototype)</title>
+<style>
+  :root{
+    --bg:#0f1b2b; --panel:#15263a; --panel2:#1b3149; --ink:#e8f0f8; --muted:#9fb3c8;
+    --line:#274963; --blue:#2b8fe0; --teal:#17b39a; --amber:#e6a54b; --red:#e0685f;
+    --green:#25b06a; --chip:#20374f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#0c1622,#0f1b2b);color:var(--ink);}
+  header{padding:18px 24px;border-bottom:1px solid var(--line);background:#0c1826;position:sticky;top:0;z-index:5}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .badge{display:inline-block;font-size:11px;color:#0c1622;background:var(--amber);border-radius:10px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+  .wrap{display:grid;grid-template-columns:300px 1fr 380px;gap:14px;padding:14px;max-width:1600px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card h2{margin:0 0 10px;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#bcd3e8}
+  .agent{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:8px;font-size:13px;transition:.25s}
+  .agent .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+  .agent.active{border-color:var(--blue);box-shadow:0 0 0 2px rgba(43,143,224,.25)}
+  .agent.active .dot{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+  .agent small{display:block;color:var(--muted);font-size:11px}
+  button{cursor:pointer;font-family:inherit}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;width:100%;margin-top:6px}
+  .btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+  .btn.teal{background:var(--teal)}
+  .btn:active{transform:translateY(1px)}
+  svg{width:100%;height:520px;display:block}
+  .node text{font-size:11px;font-weight:700;fill:#0c1622}
+  .node.new circle{animation:pop .6s ease}
+  @keyframes pop{0%{transform:scale(.1);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .edge{stroke:#3d6f95;stroke-width:1.6}
+  .edge.hot{stroke:var(--teal);stroke-width:3;filter:drop-shadow(0 0 4px var(--teal))}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .swatch{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .log{background:#0b1420;border:1px solid var(--line);border-radius:9px;padding:10px;height:150px;overflow:auto;font-family:Consolas,monospace;font-size:12px;line-height:1.5}
+  .log .t{color:#5f7c99}
+  .log .b{color:var(--blue)} .log .g{color:var(--green)} .log .a{color:var(--amber)} .log .r{color:var(--red)}
+  input[type=text]{width:100%;background:#0b1420;border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px;font-size:13px;font-family:inherit}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:5px 10px;font-size:12px;color:#cfe0f0}
+  .chip:hover{border-color:var(--blue)}
+  .step{border-left:2px solid var(--line);padding:8px 0 8px 12px;margin-left:4px;opacity:.35;transition:.35s}
+  .step.on{opacity:1;border-color:var(--teal)}
+  .step h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#bcd3e8}
+  .step .body{font-size:13px;color:var(--ink)}
+  .cause{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 9px;margin:4px 0;font-size:12px}
+  .bar{height:6px;border-radius:4px;background:var(--teal)}
+  .ans{background:#0d2a20;border:1px solid #1c5c45;border-radius:9px;padding:11px;font-size:13px;margin-top:6px}
+  .cite{font-size:11px;color:#7fd0b8;margin-top:6px}
+  .flag{background:#3a1f1c;border:1px solid #7a3a33;border-radius:8px;padding:8px;font-size:12px;color:#f0b7b0;margin-top:8px;display:none}
+  .flag.show{display:block}
+  .channels{display:flex;gap:6px;margin:8px 0}
+  .channels button{flex:1;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px;font-size:12px}
+  .channels button.on{background:var(--blue);border-color:var(--blue)}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px;text-align:center}
+  .metric b{display:block;font-size:20px}
+  .metric small{color:var(--muted);font-size:11px}
+  .gap b{color:var(--amber)} .cov b{color:var(--teal)} .res b{color:var(--green)}
+  .foot{max-width:1600px;margin:0 auto;padding:6px 18px 26px;color:#6f8298;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Future Vision — The Self-Evolving Knowledge System <span class="badge">Concept prototype</span></h1>
+  <p>Multi-agent sourcing → living knowledge graph → intent &amp; diagnosis → one accurate answer on every channel. Click through the flow below.</p>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: agents + sources -->
+  <div class="card">
+    <h2>Multi-Agent Ingestion Fleet</h2>
+    <div class="agent" data-a="comm"><span class="dot"></span><div>Community Crawler<small>weekly forum questions</small></div></div>
+    <div class="agent" data-a="code"><span class="dot"></span><div>Code / Release Listener<small>commits → impacted content</small></div></div>
+    <div class="agent" data-a="case"><span class="dot"></span><div>Case &amp; Telemetry Miner<small>symptoms, fixes, known issues</small></div></div>
+    <div class="agent" data-a="intl"><span class="dot"></span><div>Real-Time Internal Info<small>live entitlement / config</small></div></div>
+    <div class="agent" data-a="extr"><span class="dot"></span><div>Extraction &amp; Entity-Resolution<small>nodes · dedupe · confidence</small></div></div>
+    <button class="btn" onclick="runFleet()">▶ Run the fleet (ingest signals)</button>
+    <button class="btn sec" onclick="ingestCommunity()">＋ New community question</button>
+    <button class="btn sec" onclick="ingestRelease()">＋ Product / code change (proactive)</button>
+    <button class="btn sec" onclick="ingestEvidence()">＋ New evidence (updates graph)</button>
+    <h2 style="margin-top:14px">Activity log</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- CENTER: living knowledge graph -->
+  <div class="card">
+    <h2>Living Knowledge Graph <span style="text-transform:none;color:var(--muted);font-weight:400">· GraphRAG substrate · self-evolving</span></h2>
+    <svg id="graph" viewBox="0 0 640 520" aria-label="Knowledge graph"></svg>
+    <div class="legend">
+      <span><i class="swatch" style="background:#ffffff"></i>Symptom / Product / Release</span>
+      <span><i class="swatch" style="background:#bfe9df"></i>Diagnostic / Fix</span>
+      <span><i class="swatch" style="background:#f7d8cc"></i>Evidence / Article</span>
+      <span><i class="swatch" style="background:#8fd0ff"></i>Community intent</span>
+    </div>
+    <div class="metrics">
+      <div class="metric gap"><b id="mGap">31%</b><small>Gap Rate ↓ (leading)</small></div>
+      <div class="metric cov"><b id="mCov">69%</b><small>Coverage Rate ↑</small></div>
+      <div class="metric res"><b id="mRes">—</b><small>Resolution quality</small></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: understand & resolve -->
+  <div class="card">
+    <h2>Understand &amp; Resolve</h2>
+    <input id="q" type="text" placeholder="Ask in your own words…" value="Users hit an SSO redirect loop after logging in"/>
+    <div class="chips">
+      <button class="chip" onclick="setQ(this)">SSO redirect loop after login</button>
+      <button class="chip" onclick="setQ(this)">MFA prompt keeps repeating</button>
+      <button class="chip" onclick="setQ(this)">Login works on web, fails in app</button>
+    </div>
+    <div class="channels" id="channels">
+      <button data-ch="phone">📞 Phone</button>
+      <button data-ch="case" class="on">🗂 Case</button>
+      <button data-ch="self">💻 Self-serve</button>
+      <button data-ch="agent">🤖 AI agent</button>
+    </div>
+    <button class="btn teal" onclick="resolve()">Resolve query →</button>
+
+    <div id="pipe" style="margin-top:12px">
+      <div class="step" id="s1"><h4>1 · Intent detection</h4><div class="body" id="b1">—</div></div>
+      <div class="step" id="s2"><h4>2 · Diagnosis (graph reasoning)</h4><div class="body" id="b2">—</div></div>
+      <div class="step" id="s3"><h4>3 · Hybrid retrieval (vector + graph + keyword)</h4><div class="body" id="b3">—</div></div>
+      <div class="step" id="s4"><h4>4 · Grounded answer · <span id="chLabel">Case</span></h4>
+        <div class="body"><div class="ans" id="ans">—</div><div class="cite" id="cite"></div></div>
+      </div>
+      <div class="flag" id="flag">⚠ Reflection guardrail: a candidate claim is low-confidence / contradicted. Held for evidence or human review before it reaches the customer.</div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)">
+      <input type="checkbox" id="govOff"/> Simulate an unverified claim (show guardrail)
+    </label>
+  </div>
+</div>
+<div class="foot">Concept prototype — illustrative only, not a production implementation. Generic, no internal system names. Built to demonstrate the future-vision concept: agents source content, the knowledge graph self-evolves, and each query is understood, diagnosed and answered on the customer’s channel.</div>
+
+<script>
+// ---------- Graph model ----------
+const NS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("graph");
+let nodes=[
+  {id:"sym",label:"SSO redirect loop",x:150,y:90,type:"sym"},
+  {id:"prod",label:"Identity Connector",x:320,y:60,type:"sym"},
+  {id:"c1",label:"Clock skew",x:120,y:210,type:"cause",conf:.55},
+  {id:"c2",label:"Missing RelayState",x:300,y:200,type:"cause",conf:.4},
+  {id:"c3",label:"Expired cookie",x:470,y:200,type:"cause",conf:.3},
+  {id:"d1",label:"Check NTP",x:120,y:330,type:"diag"},
+  {id:"f1",label:"Resync time",x:120,y:430,type:"fix"},
+  {id:"art",label:"KB1001",x:320,y:400,type:"art"},
+  {id:"ev1",label:"Case evidence",x:470,y:330,type:"ev"},
+];
+let edges=[["sym","c1"],["sym","c2"],["sym","c3"],["prod","sym"],["c1","d1"],["d1","f1"],["f1","art"],["c1","art"],["c3","ev1"]];
+const fill={sym:"#ffffff",cause:"#ffe9c9",diag:"#bfe9df",fix:"#bfe9df",art:"#f7d8cc",ev:"#f7d8cc",intent:"#8fd0ff"};
+
+function draw(){
+  svg.innerHTML="";
+  edges.forEach(([a,b])=>{
+    const na=nodes.find(n=>n.id===a),nb=nodes.find(n=>n.id===b);
+    if(!na||!nb)return;
+    const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",na.x);l.setAttribute("y1",na.y);l.setAttribute("x2",nb.x);l.setAttribute("y2",nb.y);
+    l.setAttribute("class","edge");l.dataset.a=a;l.dataset.b=b;svg.appendChild(l);
+  });
+  nodes.forEach(n=>{
+    const g=document.createElementNS(NS,"g");g.setAttribute("class","node"+(n._new?" new":""));
+    const rr=n.type==="cause"?30:26;
+    const cir=document.createElementNS(NS,"circle");
+    cir.setAttribute("cx",n.x);cir.setAttribute("cy",n.y);cir.setAttribute("r",rr);
+    cir.setAttribute("fill",fill[n.type]||"#fff");cir.setAttribute("stroke","#0e4d8b");cir.setAttribute("stroke-width","1.5");
+    g.appendChild(cir);
+    const words=n.label.split(" ");
+    words.forEach((w,i)=>{
+      const t=document.createElementNS(NS,"text");
+      t.setAttribute("x",n.x);t.setAttribute("y",n.y+(i-(words.length-1)/2)*11+3);
+      t.setAttribute("text-anchor","middle");t.textContent=w;g.appendChild(t);
+    });
+    if(n.type==="cause"&&n.conf!=null){
+      const t=document.createElementNS(NS,"text");
+      t.setAttribute("x",n.x);t.setAttribute("y",n.y+rr+12);t.setAttribute("text-anchor","middle");
+      t.setAttribute("fill","#9fb3c8");t.style.fontWeight="400";t.textContent=Math.round(n.conf*100)+"%";g.appendChild(t);
+    }
+    svg.appendChild(g);n._new=false;
+  });
+}
+draw();
+
+// ---------- Log ----------
+const logEl=document.getElementById("log");
+function log(msg,cls="t"){const d=new Date().toLocaleTimeString();logEl.innerHTML+=`<div><span class="t">${d}</span> <span class="${cls}">${msg}</span></div>`;logEl.scrollTop=logEl.scrollHeight;}
+
+// ---------- Agents ----------
+function flash(a){const el=document.querySelector(`.agent[data-a="${a}"]`);if(el){el.classList.add("active");setTimeout(()=>el.classList.remove("active"),900);}}
+function runFleet(){
+  const seq=["comm","code","case","intl","extr"];
+  seq.forEach((a,i)=>setTimeout(()=>{flash(a);log("Agent "+a+" scanned its source",["b","b","b","b","g"][i]);},i*450));
+  setTimeout(()=>log("Extraction resolved 3 entities · attached confidence · promoted to graph","g"),seq.length*450+200);
+  setTimeout(bumpCoverage,seq.length*450+400);
+}
+function addNode(n,connectTo){
+  n._new=true;nodes.push(n);if(connectTo)edges.push([connectTo,n.id]);draw();
+}
+let commCount=0;
+function ingestCommunity(){
+  flash("comm");commCount++;
+  const id="int"+commCount;
+  addNode({id,label:"Trending Q",x:60+Math.random()*40,y:60+Math.random()*30,type:"intent"},"sym");
+  log("Community Crawler: new trending question detected → scanning corpus…","b");
+  setTimeout(()=>{log("No adequate content found → drafting new asset & flagging for SME","a");bumpCoverage();},700);
+}
+let ver=1;
+function ingestRelease(){
+  flash("code");
+  log("Code/Release Listener: production-bound commit detected","b");
+  setTimeout(()=>{
+    addNode({id:"rel"+Date.now(),label:"Release 5.4",x:430,y:70,type:"sym"},"prod");
+    log("Mapped change to impacted assets · auto-drafted work-item for SME","g");
+    log("PROACTIVE: content prepared before any customer asks (pre-release notes)","g");
+    bumpCoverage();
+  },700);
+}
+function ingestEvidence(){
+  flash("case");
+  log("Case & Telemetry Miner: new TLS-proxy evidence for 'Clock skew'","b");
+  setTimeout(()=>{
+    const c1=nodes.find(n=>n.id==="c1");c1.conf=Math.min(.95,c1.conf+.3);c1._new=true;
+    ver++;const art=nodes.find(n=>n.id==="art");art.label="KB1001 v"+ver;art._new=true;
+    if(!edges.find(e=>e[0]==="ev1"&&e[1]==="c1"))edges.push(["ev1","c1"]);
+    draw();
+    log("Confidence for 'Clock skew' ↑ → article regenerated to v"+ver+" (never stale)","g");
+    bumpCoverage();
+  },700);
+}
+
+// ---------- Metrics ----------
+let gap=31,cov=69;
+function bumpCoverage(){gap=Math.max(6,gap-2+Math.round(Math.random()));cov=100-gap;document.getElementById("mGap").textContent=gap+"%";document.getElementById("mCov").textContent=cov+"%";}
+
+// ---------- Channels ----------
+let channel="case";
+document.getElementById("channels").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  [...b.parentNode.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+  channel=b.dataset.ch;document.getElementById("chLabel").textContent=b.textContent.trim();
+  if(document.getElementById("ans").textContent!=="—")renderAnswer();
+});
+function setQ(el){document.getElementById("q").value=el.textContent;}
+
+// ---------- Resolve pipeline ----------
+const answers={
+  phone:"I can help right away. This looks like an SSO redirect loop caused by clock skew on the Identity Connector. Let’s resync the server time to an NTP source — I’ll walk you through it now.",
+  case:"Diagnosis: SSO redirect loop on Identity Connector, most likely cause = clock skew (94%).\nResolution: resync the connector host to a reliable NTP source, then retry the sign-in.\nApplicability: Identity Connector 5.x, EU region.",
+  self:"SSO redirect loop after login?\n1. Check the connector host time.\n2. Resync to an NTP source.\n3. Retry sign-in.\nStill stuck? See related: RelayState, cookie expiry.",
+  agent:"{intent:'sso_redirect_loop', cause:'clock_skew', confidence:0.94, fix:'resync_ntp', applies_to:['IdentityConnector 5.x'], sources:['KB1001','case-evidence'], channel:'agent'}"
+};
+function step(id,txt,delay){return new Promise(r=>setTimeout(()=>{const s=document.getElementById(id);s.classList.add("on");if(txt)s.querySelector(".body").innerHTML=txt;r();},delay));}
+async function resolve(){
+  document.querySelectorAll(".step").forEach(s=>s.classList.remove("on"));
+  document.getElementById("flag").classList.remove("show");
+  document.getElementById("ans").textContent="—";document.getElementById("cite").textContent="";
+  edges.forEach(()=>{});draw();
+  log("Query received on "+channel+" channel","b");
+  await step("s1","Intent = <b>sso_redirect_loop</b> · enriched with work-context + discovery context (product, version, region)",300);
+  // highlight diagnosis path
+  await step("s2","",500);
+  hotPath();
+  const causes=nodes.filter(n=>n.type==="cause").sort((a,b)=>b.conf-a.conf);
+  let html="Ranked causes from graph:";
+  causes.forEach(cz=>{html+=`<div class="cause"><span>${cz.label}</span><span style="min-width:90px"><span class="bar" style="width:${Math.round(cz.conf*80)}px;display:inline-block"></span> ${Math.round(cz.conf*100)}%</span></div>`;});
+  document.getElementById("b2").innerHTML=html;
+  await step("s3","Assembled evidence: KB article + case evidence + telemetry · reranked",700);
+  const unverified=document.getElementById("govOff").checked;
+  if(unverified){document.getElementById("flag").classList.add("show");log("Reflection guardrail held a low-confidence claim","r");}
+  await step("s4","",600);
+  renderAnswer();
+  log("Resolved · grounded answer delivered on "+channel,"g");
+  document.getElementById("mRes").textContent=unverified?"guarded":"98%";
+}
+function renderAnswer(){
+  document.getElementById("ans").textContent=answers[channel];
+  document.getElementById("cite").innerHTML="Sources: <b>KB1001 v"+ver+"</b> · case evidence · product telemetry — every claim traceable";
+}
+function hotPath(){
+  const hot=[["sym","c1"],["c1","d1"],["d1","f1"],["f1","art"]];
+  [...svg.querySelectorAll(".edge")].forEach(l=>{
+    if(hot.find(h=>h[0]===l.dataset.a&&h[1]===l.dataset.b))l.classList.add("hot");
+  });
+}
+log("System ready · graph loaded with baseline scenario","g");
+</script>
+</body>
+</html>

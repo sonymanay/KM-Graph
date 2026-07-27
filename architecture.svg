@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="742" viewBox="0 0 1480 742" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#5A6B7B"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1F6FB2"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#127C71"/>
+    </marker>
+    <linearGradient id="kg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E4D8B"/>
+      <stop offset="1" stop-color="#12639E"/>
+    </linearGradient>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="1480" height="742" fill="#F5F8FB"/>
+  <text x="40" y="46" font-size="30" font-weight="700" fill="#0E3A63">Future Vision: The Self-Evolving Knowledge System</text>
+  <text x="40" y="74" font-size="17" fill="#5A6B7B">Multi-agent sourcing &#8594; living knowledge graph &#8594; intent &amp; diagnosis &#8594; one accurate answer on every channel</text>
+
+  <!-- ================= Column A: Signal Sources ================= -->
+  <text x="60" y="130" font-size="18" font-weight="700" fill="#0E3A63">1 &#183; Signal Sources</text>
+  <g font-size="14" fill="#243B53">
+    <rect x="40" y="150" width="230" height="44" rx="8" fill="#FFFFFF" stroke="#C3D3E2" filter="url(#sh)"/><text x="58" y="178">Community portals &amp; forums</text>
+    <rect x="40" y="205" width="230" height="44" rx="8" fill="#FFFFFF" stroke="#C3D3E2" filter="url(#sh)"/><text x="58" y="233">Product &amp; code updates / releases</text>
+    <rect x="40" y="260" width="230" height="44" rx="8" fill="#FFFFFF" stroke="#C3D3E2" filter="url(#sh)"/><text x="58" y="288">Cases, notes &amp; telemetry</text>
+    <rect x="40" y="315" width="230" height="44" rx="8" fill="#FFFFFF" stroke="#C3D3E2" filter="url(#sh)"/><text x="58" y="343">Internal systems (real-time)</text>
+    <rect x="40" y="370" width="230" height="44" rx="8" fill="#FFFFFF" stroke="#C3D3E2" filter="url(#sh)"/><text x="58" y="398">Docs, KB &amp; existing corpus</text>
+    <rect x="40" y="425" width="230" height="44" rx="8" fill="#FFFFFF" stroke="#C3D3E2" filter="url(#sh)"/><text x="58" y="453">Incidents &amp; known issues</text>
+  </g>
+
+  <!-- ================= Column B: Multi-Agent Ingestion Fleet ================= -->
+  <text x="320" y="130" font-size="18" font-weight="700" fill="#0E3A63">2 &#183; Multi-Agent Ingestion Fleet</text>
+  <rect x="310" y="150" width="250" height="320" rx="14" fill="#EAF2FA" stroke="#9EC0DE"/>
+  <g font-size="13.5" fill="#0E3A63" font-weight="600">
+    <rect x="326" y="168" width="218" height="42" rx="8" fill="#FFFFFF" stroke="#1F6FB2"/><text x="342" y="194">Community Crawler Agent</text>
+    <rect x="326" y="220" width="218" height="42" rx="8" fill="#FFFFFF" stroke="#1F6FB2"/><text x="342" y="246">Code / Release Listener Agent</text>
+    <rect x="326" y="272" width="218" height="42" rx="8" fill="#FFFFFF" stroke="#1F6FB2"/><text x="342" y="298">Case &amp; Telemetry Miner Agent</text>
+    <rect x="326" y="324" width="218" height="42" rx="8" fill="#FFFFFF" stroke="#1F6FB2"/><text x="342" y="350">Real-Time Internal Info Agent</text>
+    <rect x="326" y="376" width="218" height="42" rx="8" fill="#FFFFFF" stroke="#1F6FB2"/><text x="342" y="402">Extraction &amp; Entity-Resolution</text>
+    <rect x="326" y="428" width="218" height="34" rx="8" fill="#FFF4E5" stroke="#E0A24B"/><text x="342" y="450" fill="#8A5A12">Dedupe &#183; confidence &#183; conflict</text>
+  </g>
+
+  <!-- ================= Column C: Living Knowledge Graph ================= -->
+  <text x="628" y="130" font-size="18" font-weight="700" fill="#0E3A63">3 &#183; Living Knowledge Graph</text>
+  <rect x="600" y="150" width="330" height="320" rx="18" fill="url(#kg)" filter="url(#sh)"/>
+  <text x="765" y="178" font-size="14" fill="#CFE6FA" text-anchor="middle">self-evolving &#183; GraphRAG substrate</text>
+  <!-- graph nodes -->
+  <g>
+    <line x1="690" y1="240" x2="770" y2="210" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="770" y1="210" x2="850" y2="250" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="690" y1="240" x2="720" y2="330" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="770" y1="210" x2="790" y2="320" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="850" y1="250" x2="840" y2="340" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="720" y1="330" x2="790" y2="320" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="790" y1="320" x2="840" y2="340" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="720" y1="330" x2="735" y2="410" stroke="#7FB4E0" stroke-width="2"/>
+    <line x1="840" y1="340" x2="835" y2="415" stroke="#7FB4E0" stroke-width="2"/>
+    <g font-size="11" fill="#0E3A63" font-weight="700" text-anchor="middle">
+      <circle cx="690" cy="240" r="26" fill="#FFFFFF"/><text x="690" y="243">Symptom</text>
+      <circle cx="770" cy="210" r="26" fill="#FFFFFF"/><text x="770" y="213">Cause</text>
+      <circle cx="850" cy="250" r="26" fill="#FFFFFF"/><text x="850" y="253">Product</text>
+      <circle cx="716" cy="332" r="27" fill="#DFF3EE"/><text x="716" y="335" font-size="10">Diagnostic</text>
+      <circle cx="790" cy="320" r="26" fill="#DFF3EE"/><text x="790" y="323">Fix</text>
+      <circle cx="852" cy="342" r="26" fill="#FFFFFF"/><text x="852" y="345">Release</text>
+      <circle cx="735" cy="412" r="26" fill="#FDEDE7"/><text x="735" y="415">Evidence</text>
+      <circle cx="835" cy="418" r="26" fill="#FDEDE7"/><text x="835" y="421">Article</text>
+    </g>
+  </g>
+
+  <!-- ================= Column D: Understand &amp; Resolve ================= -->
+  <text x="985" y="130" font-size="18" font-weight="700" fill="#0E3A63">4 &#183; Understand &amp; Resolve</text>
+  <g font-size="14" fill="#0E3A63" font-weight="600">
+    <rect x="975" y="150" width="230" height="50" rx="10" fill="#FFFFFF" stroke="#127C71" filter="url(#sh)"/><text x="992" y="172">Customer query (any channel)</text><text x="992" y="190" font-size="11.5" font-weight="400" fill="#5A6B7B">voice &#183; case &#183; chat &#183; self-serve</text>
+    <rect x="975" y="212" width="230" height="44" rx="10" fill="#EAF6F4" stroke="#127C71"/><text x="992" y="239">Intent detection</text>
+    <rect x="975" y="268" width="230" height="44" rx="10" fill="#EAF6F4" stroke="#127C71"/><text x="992" y="295">Diagnosis (graph reasoning)</text>
+    <rect x="975" y="324" width="230" height="44" rx="10" fill="#EAF6F4" stroke="#127C71"/><text x="992" y="351">Hybrid retrieval: vec+graph+kw</text>
+    <rect x="975" y="380" width="230" height="50" rx="10" fill="#0E7C5A" stroke="#0B5E44"/><text x="992" y="402" fill="#FFFFFF">Grounded, cited answer</text><text x="992" y="420" font-size="11.5" font-weight="400" fill="#CDEDE2">personalized to context</text>
+  </g>
+
+  <!-- ================= Omni-channel delivery bar ================= -->
+  <rect x="975" y="470" width="465" height="40" rx="10" fill="#123A5E"/>
+  <text x="1207" y="495" font-size="14" fill="#FFFFFF" font-weight="600" text-anchor="middle">Omni-channel delivery &#183; phone &#183; case &#183; self-serve &#183; AI agent (via MCP)</text>
+
+  <!-- ================= Reflection / Governance layer ================= -->
+  <rect x="40" y="540" width="1400" height="150" rx="14" fill="#FFFFFF" stroke="#C3D3E2"/>
+  <text x="60" y="568" font-size="17" font-weight="700" fill="#0E3A63">Governance, Reflection &amp; Answer-Quality Guardrails (spanning the whole loop)</text>
+  <g font-size="13.5" fill="#243B53">
+    <rect x="60" y="586" width="250" height="40" rx="8" fill="#F3F7FB" stroke="#C3D3E2"/><text x="76" y="611">Hallucination reflection &amp; repair</text>
+    <rect x="330" y="586" width="250" height="40" rx="8" fill="#F3F7FB" stroke="#C3D3E2"/><text x="346" y="611">Contradiction &amp; freshness checks</text>
+    <rect x="600" y="586" width="250" height="40" rx="8" fill="#F3F7FB" stroke="#C3D3E2"/><text x="616" y="611">Source authority &amp; provenance</text>
+    <rect x="870" y="586" width="270" height="40" rx="8" fill="#F3F7FB" stroke="#C3D3E2"/><text x="886" y="611">PII redaction &amp; sensitivity labels</text>
+    <rect x="1160" y="586" width="270" height="40" rx="8" fill="#F3F7FB" stroke="#C3D3E2"/><text x="1176" y="611">Human-in-loop for gray areas</text>
+    <rect x="60" y="636" width="380" height="40" rx="8" fill="#EAF6F4" stroke="#127C71"/><text x="76" y="661" fill="#0E3A63">Measured by resolution quality, not deflection alone</text>
+    <rect x="460" y="636" width="380" height="40" rx="8" fill="#EAF6F4" stroke="#127C71"/><text x="476" y="661" fill="#0E3A63">Capability compounds &#183; cost stays flat</text>
+    <rect x="860" y="636" width="580" height="40" rx="8" fill="#FFF4E5" stroke="#E0A24B"/><text x="876" y="661" fill="#8A5A12">Gap Rate is the hinge &#183; owned as a single accountable number</text>
+  </g>
+
+  <!-- ================= Flows ================= -->
+  <!-- sources -> fleet -->
+  <path d="M270 172 H300" stroke="#5A6B7B" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M270 282 H300" stroke="#5A6B7B" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M270 392 H300" stroke="#5A6B7B" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M270 447 C288 447 292 350 300 350" stroke="#5A6B7B" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <!-- fleet -> KG (continuous update) -->
+  <path d="M560 300 H596" stroke="#1F6FB2" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  <text x="562" y="290" font-size="12" fill="#1F6FB2" font-weight="600">continuous update</text>
+  <!-- KG -> resolve -->
+  <path d="M930 300 H971" stroke="#127C71" stroke-width="3" fill="none" marker-end="url(#arrowTeal)"/>
+  <text x="905" y="290" font-size="12" fill="#127C71" font-weight="600">ground</text>
+  <!-- internal query flow vertical in column D -->
+  <path d="M1090 200 V208" stroke="#127C71" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <path d="M1090 256 V264" stroke="#127C71" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <path d="M1090 312 V320" stroke="#127C71" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <path d="M1090 368 V376" stroke="#127C71" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <path d="M1090 430 V466" stroke="#127C71" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <!-- diagnosis pulls from KG -->
+  <path d="M975 290 C945 290 940 300 933 300" stroke="#127C71" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#arrowTeal)"/>
+  <!-- feedback loop: outcome back to KG -->
+  <path d="M975 490 C700 520 700 400 765 458" stroke="#B24; " fill="none"/>
+  <path d="M980 490 C620 540 560 470 765 462" stroke="#C0642A" stroke-width="2.5" stroke-dasharray="7 5" fill="none" marker-end="url(#arrow)"/>
+  <text x="600" y="512" font-size="12.5" fill="#C0642A" font-weight="600">outcome &amp; new questions feed the graph (self-evolving loop)</text>
+
+  <text x="40" y="720" font-size="12.5" fill="#8595A5">Every customer question is both a query to answer and a signal that sharpens the next answer. The product change becomes content before the customer asks.</text>
+</svg>
