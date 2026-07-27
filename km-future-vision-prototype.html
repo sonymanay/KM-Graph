@@ -64,6 +64,39 @@
   .metric small{color:var(--muted);font-size:11px}
   .gap b{color:var(--amber)} .cov b{color:var(--teal)} .res b{color:var(--green)}
   .foot{max-width:1600px;margin:0 auto;padding:6px 18px 26px;color:#6f8298;font-size:12px}
+  /* --- concept explainer + self-evolving article --- */
+  .section{max-width:1600px;margin:0 auto;padding:0 14px 14px}
+  .section > .card{margin-bottom:14px}
+  .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:1100px){.concept-grid{grid-template-columns:1fr}}
+  .cstep{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;transition:.3s}
+  .cstep h3{margin:0 0 6px;font-size:13px;color:#bcd3e8}
+  .cstep p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.55}
+  .vec{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}
+  .vec span{background:#0b1420;border:1px solid var(--line);border-radius:5px;padding:3px 6px;font-family:Consolas,monospace;font-size:11px;color:#8fd0ff}
+  .simrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin:4px 0}
+  .simrow .name{color:var(--ink)}
+  .simbar{height:7px;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue))}
+  .rel{display:inline-block;font-family:Consolas,monospace;font-size:11px;color:#bfe9df;background:#0d2a20;border:1px solid #1c5c45;border-radius:5px;padding:2px 6px;margin:2px 3px 2px 0}
+  .lane{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:12px;color:var(--muted)}
+  .lane b{font-size:11px;text-transform:uppercase;color:#9fb3c8}
+  .pathline{font-family:Consolas,monospace;font-size:11.5px;color:#e8f0f8;background:#0b1420;border:1px solid var(--line);border-radius:7px;padding:8px;line-height:1.6;word-break:break-word}
+  .doc{background:#ffffff;color:#171717;border-radius:10px;overflow:hidden;border:1px solid #d0d7de}
+  .doc .bar{background:#f3f2f1;border-bottom:1px solid #e1dfdd;padding:8px 14px;font-size:12px;color:#605e5c}
+  .doc .body{padding:14px 18px}
+  .doc .crumb{font-size:11px;color:#0067b8;margin:0 0 6px}
+  .doc h3{margin:0 0 4px;font-size:18px;color:#171717}
+  .doc .meta{font-size:11px;color:#605e5c;margin:0 0 10px}
+  .doc h4{font-size:14px;margin:12px 0 6px;color:#171717}
+  .doc ul{margin:0;padding-left:18px}
+  .doc li{font-size:12.5px;line-height:1.55;margin:4px 0;color:#242424}
+  .doc .ins{background:#d6f5df;border-left:3px solid #1a7f37;padding:6px 8px;border-radius:4px;display:block;margin:5px 0;color:#0f3d1c;animation:pop .5s ease}
+  .doc code{background:#f0f0f0;border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:12px;color:#0a3069}
+  .vtabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+  .vtabs button{background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 12px;font-size:12px}
+  .vtabs button.on{background:var(--blue);border-color:var(--blue)}
+  .changelog{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;font-size:12px;line-height:1.5}
+  .changelog .k{color:var(--amber);font-weight:600}
 </style>
 </head>
 <body>
@@ -137,6 +170,91 @@
     </label>
   </div>
 </div>
+<div class="section">
+  <!-- Concept explainer -->
+  <div class="card">
+    <h2>Inside &ldquo;Understand &amp; Resolve&rdquo; — the concepts behind each step</h2>
+    <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">How a plain-language question becomes a diagnosed, grounded answer — semantic search, graph nodes and typed relationships, hybrid retrieval and grounding.
+      <button class="btn sec" style="width:auto;display:inline-block;padding:6px 12px;margin-top:0" onclick="traceConcepts()">▶ Trace the steps</button></p>
+    <div class="concept-grid">
+      <div>
+        <div class="cstep" id="cc1">
+          <h3>1 · Intent detection &amp; entity extraction</h3>
+          <p>An LLM reads the raw question and classifies the <b>intent</b>, then extracts <b>entities</b> — product, version, symptom, region. Meaning first; no keyword matching yet.</p>
+          <div class="pathline">&ldquo;Users hit an <span style="color:#e6a54b">SSO redirect loop</span> after logging in&rdquo;<br>→ intent = <b style="color:#8fd0ff">sso_redirect_loop</b> · entities = {product: Identity Connector, symptom: redirect_loop}</div>
+        </div>
+        <div class="cstep" id="cc2">
+          <h3>2 · Semantic search (embeddings + vector similarity)</h3>
+          <p>The query becomes an <b>embedding</b> — a numeric vector capturing meaning. It is compared to every node/article embedding by <b>cosine similarity</b>, so &ldquo;redirect loop&rdquo; matches &ldquo;authentication loop&rdquo; even with no shared words.</p>
+          <div class="vec" id="qvec"></div>
+          <div id="simlist"></div>
+        </div>
+        <div class="cstep" id="cc3">
+          <h3>3 · Graph reasoning (nodes &amp; typed relationships)</h3>
+          <p>Each match is a <b>node</b> in the knowledge graph. Typed <b>edges</b> let the system reason across multiple hops instead of returning one flat page:</p>
+          <div>
+            <span class="rel">Symptom —CAUSED_BY→ Cause</span>
+            <span class="rel">Cause —DIAGNOSED_BY→ Diagnostic</span>
+            <span class="rel">Diagnostic —RESOLVED_BY→ Fix</span>
+            <span class="rel">Fix —DOCUMENTED_IN→ Article</span>
+            <span class="rel">Cause —EVIDENCED_BY→ Evidence</span>
+          </div>
+          <div class="pathline" style="margin-top:8px">Multi-hop traversal: SSO redirect loop → <b>Clock skew (94%)</b> → Check NTP → Resync time → KB1001. Confidence propagates along the path; an applicability filter drops causes that don&rsquo;t match the customer&rsquo;s version/entitlement.</div>
+        </div>
+      </div>
+      <div>
+        <div class="cstep" id="cc4">
+          <h3>4 · Hybrid retrieval &amp; rerank</h3>
+          <p>Three retrievers run in parallel and are fused by a <b>reranker</b> (reciprocal-rank fusion). Each lane catches what the others miss:</p>
+          <div class="lane"><b>Vector</b><div>semantic match on meaning — embeddings + cosine similarity</div></div>
+          <div class="lane"><b>Graph</b><div>the Symptom→Cause→Fix subgraph, filtered by version &amp; entitlement</div></div>
+          <div class="lane"><b>Keyword</b><div>exact terms / error codes (BM25) — e.g. <code style="background:#0b1420;color:#8fd0ff;border-radius:4px;padding:1px 5px">81002</code></div></div>
+          <div class="pathline" style="margin-top:8px">rerank( vector ⊕ graph ⊕ keyword ) → top evidence: <b>KB1001 v2</b> · case evidence · telemetry</div>
+        </div>
+        <div class="cstep" id="cc5">
+          <h3>5 · Grounded answer + provenance</h3>
+          <p>The LLM composes the answer <b>only</b> from retrieved evidence, and every claim carries a citation. A <b>reflection</b> step verifies each claim against its source before it reaches the customer; then the answer is shaped to the channel.</p>
+          <div class="pathline">answer = compose(evidence) · cite(KB1001 v2, case-evidence) · reflect(✓) · shape(channel)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Self-evolving Microsoft Learn article -->
+  <div class="card">
+    <h2>Self-Evolving Content — a real Microsoft Learn article updates from a customer query</h2>
+    <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">When the case miners and community crawler detect that a recurring query isn&rsquo;t fully answered by existing content, the system drafts an update, an SME validates it, and the published article version increments — so the next customer gets the better answer.</p>
+    <div class="concept-grid">
+      <div>
+        <div class="vtabs">
+          <button id="vt1" class="on" onclick="showVer(1)">v1 · before</button>
+          <button id="vt2" onclick="showVer(2)">v2 · after (enhanced)</button>
+          <button class="btn teal" style="width:auto;padding:6px 12px;margin:0" onclick="regen()">⟳ Regenerate from customer signal</button>
+        </div>
+        <div class="doc">
+          <div class="bar">📄 learn.microsoft.com › Entra › Identity › Hybrid › Connect</div>
+          <div class="body">
+            <div class="crumb">Microsoft Entra ID / Hybrid identity / Microsoft Entra Connect</div>
+            <h3>Troubleshoot Microsoft Entra seamless single sign-on</h3>
+            <div class="meta" id="docmeta">Last updated: 2025-04-09 · Version 1</div>
+            <h4>Troubleshooting checklist</h4>
+            <ul id="checklist"></ul>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#6f8298;margin-top:6px">Source: <a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-connect-sso" style="color:#7fd0b8">learn.microsoft.com/…/tshoot-connect-sso</a> — real published article (checklist text is genuine); the v1→v2 update is an illustrative example of the self-evolving loop.</div>
+      </div>
+      <div>
+        <div class="changelog" id="changelog">…</div>
+        <div class="cstep" style="margin-top:10px">
+          <h3>Answer to the customer — before vs. after</h3>
+          <div id="ansBefore"></div>
+          <div id="ansAfter"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="foot">Concept prototype — illustrative only, not a production implementation. Generic, no internal system names. Built to demonstrate the future-vision concept: agents source content, the knowledge graph self-evolves, and each query is understood, diagnosed and answered on the customer’s channel.</div>
 
 <script>
@@ -264,7 +382,7 @@ async function resolve(){
   document.getElementById("ans").textContent="—";document.getElementById("cite").textContent="";
   edges.forEach(()=>{});draw();
   log("Query received on "+channel+" channel","b");
-  await step("s1","Intent = <b>sso_redirect_loop</b> · enriched with work-context + discovery context (product, version, region)",300);
+  await step("s1","Intent = <b>sso_redirect_loop</b> (classified by meaning, not keywords) · entities extracted {product, version, region} · enriched with work-context + discovery context",300);
   // highlight diagnosis path
   await step("s2","",500);
   hotPath();
@@ -272,7 +390,7 @@ async function resolve(){
   let html="Ranked causes from graph:";
   causes.forEach(cz=>{html+=`<div class="cause"><span>${cz.label}</span><span style="min-width:90px"><span class="bar" style="width:${Math.round(cz.conf*80)}px;display:inline-block"></span> ${Math.round(cz.conf*100)}%</span></div>`;});
   document.getElementById("b2").innerHTML=html;
-  await step("s3","Assembled evidence: KB article + case evidence + telemetry · reranked",700);
+  await step("s3","Vector (semantic / cosine) ⊕ Graph subgraph (Symptom→Cause→Fix) ⊕ Keyword/BM25 (error code <b>81002</b>) → fused by reranker (RRF). Assembled: <b>KB1001 v"+ver+"</b> + case evidence + telemetry",700);
   const unverified=document.getElementById("govOff").checked;
   if(unverified){document.getElementById("flag").classList.add("show");log("Reflection guardrail held a low-confidence claim","r");}
   await step("s4","",600);
@@ -290,6 +408,54 @@ function hotPath(){
     if(hot.find(h=>h[0]===l.dataset.a&&h[1]===l.dataset.b))l.classList.add("hot");
   });
 }
+// ---------- Concept trace (Understand & Resolve explainer) ----------
+function traceConcepts(){
+  const ids=["cc1","cc2","cc3","cc4","cc5"];
+  const qvec=document.getElementById("qvec");qvec.innerHTML="";
+  const dims=[0.12,-0.34,0.88,0.05,-0.61,0.47,0.23,-0.19,0.71,-0.08];
+  dims.forEach(d=>{const s=document.createElement("span");s.textContent=(d<0?"":"+")+d.toFixed(2);qvec.appendChild(s);});
+  const one=document.createElement("span");one.textContent="… (1536-d)";one.style.color="#9fb3c8";qvec.appendChild(one);
+  const sims=[["SSO redirect loop · Symptom",0.94],["Authentication loop after SAML · Article",0.88],["Clock skew / time sync · Cause",0.83],["MFA prompt repeats · Symptom",0.41]];
+  const sl=document.getElementById("simlist");sl.innerHTML="<div style='font-size:11px;color:#9fb3c8;margin:4px 0'>cosine similarity to graph embeddings:</div>";
+  sims.forEach(([n,s])=>{sl.innerHTML+=`<div class="simrow"><span class="name">${n}</span><span style="min-width:118px;display:flex;align-items:center;gap:6px;justify-content:flex-end"><span class="simbar" style="width:${Math.round(s*80)}px"></span>${s.toFixed(2)}</span></div>`;});
+  ids.forEach((id,i)=>setTimeout(()=>{const el=document.getElementById(id);el.style.boxShadow="0 0 0 2px rgba(43,143,224,.55)";setTimeout(()=>el.style.boxShadow="",1050);},i*520));
+  log("Concept trace: embed → semantic match → graph traverse → rerank → ground","b");
+}
+
+// ---------- Self-evolving Microsoft Learn article ----------
+const checklistV1=[
+  "Ensure the Seamless SSO feature is enabled in Microsoft Entra Connect.",
+  "Ensure the Microsoft Entra URL (<code>autologon.microsoftazuread-sso.com</code>) is in the user's Intranet zone.",
+  "Ensure the corporate device is joined to the Active Directory domain and connected to the corporate network.",
+  "Ensure the device's time is synchronized with Active Directory and the domain controllers, and that they are within five minutes of each other.",
+  "Purge existing Kerberos tickets with <code>klist purge</code> and try again."
+];
+const insertedStep="<span class=\"ins\"><b>NEW in v2 —</b> If the clocks differ by more than five minutes, resync the connector/member host: run <code>w32tm /resync</code> (or point the PDC emulator to a reliable NTP source), then retry sign-in. Sign-in error codes <code>81002</code> and <code>81008</code> (&ldquo;Unable to validate the user's Kerberos ticket&rdquo;) most commonly map to this clock-skew cause.</span>";
+function renderChecklist(v){
+  const ul=document.getElementById("checklist");ul.innerHTML="";
+  checklistV1.forEach((it,i)=>{
+    ul.insertAdjacentHTML("beforeend",`<li>${it}</li>`);
+    if(v===2 && i===3){ul.insertAdjacentHTML("beforeend",`<li style="list-style:none;margin-left:-14px">${insertedStep}</li>`);}
+  });
+  document.getElementById("docmeta").textContent = v===1 ? "Last updated: 2025-04-09 · Version 1" : "Last updated: 2026-06-25 · Version 2 (regenerated from customer signal)";
+  document.getElementById("vt1").classList.toggle("on",v===1);
+  document.getElementById("vt2").classList.toggle("on",v===2);
+}
+function showVer(v){renderChecklist(v);}
+function regen(){
+  log("Case & Telemetry Miner: 312 queries this month match intent 'sso_redirect_loop' · cause = clock skew","b");
+  setTimeout(()=>log("Gap detected: checklist lacks a remediation step for time resync → drafting v2","a"),600);
+  setTimeout(()=>{renderChecklist(2);log("SME validated · KB1001 → v2 published · answer accuracy ↑","g");bumpCoverage();},1300);
+}
+document.getElementById("changelog").innerHTML=
+  `<div><span class="k">Signal</span> · 312 community + case queries this month matched intent <b>sso_redirect_loop</b> where the diagnosed cause was clock skew.</div>
+   <div style="margin-top:6px"><span class="k">Gap detected</span> · the checklist said to <i>ensure</i> time sync but gave no <i>remediation</i> step → 27% of those customers re-contacted.</div>
+   <div style="margin-top:6px"><span class="k">Action</span> · Case &amp; Telemetry Miner + Community Crawler flag the gap → auto-draft the new step → SME reviews &amp; approves → publish as v2.</div>
+   <div style="margin-top:6px"><span class="k">Result</span> · Gap Rate for this topic ↓ · first-contact resolution ↑ · graph node KB1001 → v2, confidence for &lsquo;Clock skew&rsquo; ↑ to 94%.</div>`;
+document.getElementById("ansBefore").innerHTML='<div style="font-size:12px;color:#f0b7b0;margin-top:6px"><b>v1 answer:</b> &ldquo;Ensure your device time is synchronized with Active Directory (within five minutes).&rdquo; <i>— customer doesn&rsquo;t know how to resync → re-contacts.</i></div>';
+document.getElementById("ansAfter").innerHTML='<div style="font-size:12px;color:#7fd0b8;margin-top:8px"><b>v2 answer:</b> &ldquo;Your redirect loop matches clock skew (error 81002). Run <code style="color:#8fd0ff;background:#0b1420;border-radius:4px;padding:1px 4px">w32tm /resync</code> on the connector host to resync time to your NTP source, then retry sign-in.&rdquo; <i>— resolved on first contact · traceable to KB1001 v2.</i></div>';
+renderChecklist(1);
+
 log("System ready · graph loaded with baseline scenario","g");
 </script>
 </body>
