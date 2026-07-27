@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KM Eval Rehydration — Control Plane</title>
+<style>
+:root {
+  --bg: #0d1117; --s1: #161b22; --s2: #21262d; --bdr: #30363d;
+  --txt: #c9d1d9; --muted: #8b949e; --accent: #58a6ff; --green: #3fb950;
+  --orange: #d29922; --red: #f85149; --purple: #bc8cff; --teal: #39d0d8; --pink:#f778ba;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); min-height: 100vh; }
+.app { display: grid; grid-template-columns: 250px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+
+/* Topbar */
+.topbar { grid-column: 1 / -1; background: var(--s1); padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--bdr); flex-wrap: wrap; }
+.topbar h1 { font-size: 15px; font-weight: 700; color: #fff; display:flex; align-items:center; gap:8px; }
+.topbar h1 .dot { width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+.topbar .clock { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.controls { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+.btn { padding: 6px 12px; border: 1px solid var(--bdr); border-radius: 6px; background: var(--s2); color: var(--txt); font-size: 11.5px; cursor: pointer; font-family: inherit; font-weight:600; transition:.15s; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+.btn.primary:hover { background:#388bfd; }
+.btn.warn:hover { border-color:var(--orange); color:var(--orange); }
+.btn.danger:hover { border-color:var(--red); color:var(--red); }
+
+/* Sidebar */
+.sidebar { background: var(--s1); border-right: 1px solid var(--bdr); padding: 16px; overflow-y: auto; }
+.sidebar h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 18px 0 8px; }
+.sidebar h3:first-child { margin-top: 0; }
+.nav-item { width: 100%; padding: 9px 12px; border: none; border-radius: 6px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px; margin-bottom: 2px; font-family: inherit; transition: all 0.15s; }
+.nav-item:hover { background: var(--s2); color: var(--txt); }
+.nav-item.active { background: #1e3a5f; color: var(--accent); font-weight: 600; }
+.nav-item .icon { font-size: 14px; width: 20px; text-align: center; }
+.hc { background: var(--s2); border: 1px solid var(--bdr); border-radius: 8px; padding: 11px; margin-bottom: 8px; }
+.hc .hc-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.hc .hc-val { font-size: 20px; font-weight: 700; margin-top: 3px; }
+.hc .hc-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.hbar { height: 4px; background: #111318; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.hbar .fill { height: 100%; border-radius: 2px; transition: width 0.6s; }
+
+/* Main */
+.main { padding: 22px; overflow-y: auto; }
+.page { display: none; } .page.active { display: block; animation:fade .3s; }
+@keyframes fade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+.page-title { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+.page-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; max-width:820px; line-height:1.5; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--s1); border: 1px solid var(--bdr); border-radius: 10px; padding: 15px; position:relative; overflow:hidden; }
+.kpi .kpi-val { font-size: 26px; font-weight: 700; font-variant-numeric:tabular-nums; }
+.kpi .kpi-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.kpi .kpi-delta { font-size: 10.5px; margin-top: 6px; font-weight: 600; }
+.kpi .kpi-delta.up { color: var(--green); } .kpi .kpi-delta.down { color: var(--red); } .kpi .kpi-delta.neutral { color: var(--muted); }
+.kpi .spark { position:absolute; right:10px; top:12px; opacity:.6 }
+
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+@media (max-width:1000px){ .grid2,.grid3{grid-template-columns:1fr} }
+.card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 10px; padding: 16px; margin-bottom:14px; }
+.card h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display:flex; align-items:center; gap:6px; }
+.card h3 .r { margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; }
+
+/* bar chart */
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 12px; }
+.bar-label { width: 150px; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.bar-track { flex: 1; height: 20px; background: #111318; border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 10px; font-weight: 600; color: #fff; min-width: 22px; transition: width 0.6s; }
+.bar-count { width: 46px; text-align: right; color: var(--muted); font-size: 11px; flex-shrink: 0; }
+
+/* pills / badges */
+.badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing:.3px; }
+.badge.pass,.badge.GREEN,.badge.FRESH { background:#0d3a2b; color:#6ee7b7; }
+.badge.warn,.badge.AMBER,.badge.AGING { background:#3b2f00; color:#fcd34d; }
+.badge.fail,.badge.RED,.badge.STALE { background:#5c1a1a; color:#fca5a5; }
+.badge.info { background:#16324f; color:#93c5fd; }
+.badge.purple { background:#2d1e4f; color:#d2b3ff; }
+
+/* pipeline */
+.pipe { display:flex; gap:6px; margin-bottom:8px; }
+.stage { flex:1; background: var(--s1); border:1px solid var(--bdr); border-radius:8px; padding:12px 8px; text-align:center; transition:all .4s; position:relative; }
+.stage .s-ic { font-size:20px; margin-bottom:4px; }
+.stage .s-nm { font-size:10px; font-weight:700; color:var(--muted); }
+.stage .s-ct { font-size:15px; font-weight:700; color:var(--accent); margin-top:4px; font-variant-numeric:tabular-nums; }
+.stage.hot { border-color:var(--accent); background:#132a44; box-shadow:0 0 0 1px var(--accent) inset; }
+.stage.ok { border-color:var(--green); }
+.pipe-arrow { align-self:center; color:var(--muted); font-size:14px; }
+
+/* event stream */
+.stream { max-height:340px; overflow-y:auto; font-size:12px; }
+.ev { display:flex; gap:10px; padding:8px 4px; border-bottom:1px solid var(--bdr); align-items:flex-start; animation:fade .3s; }
+.ev .t { color:var(--muted); font-size:10.5px; width:60px; flex-shrink:0; font-variant-numeric:tabular-nums; padding-top:1px; }
+.ev .ic { width:18px; flex-shrink:0; text-align:center; }
+.ev .msg { flex:1; line-height:1.4; }
+.ev .msg b { color:#fff; font-weight:600; }
+.ev .tag { font-size:9.5px; padding:1px 6px; border-radius:10px; margin-left:4px; }
+
+/* table */
+.tbl { width:100%; border-collapse:collapse; font-size:12px; }
+.tbl th { background:#111318; color:var(--muted); font-size:10px; text-transform:uppercase; padding:9px 10px; text-align:left; letter-spacing:.5px; }
+.tbl td { padding:8px 10px; border-bottom:1px solid var(--bdr); vertical-align:middle; }
+.tbl tr:hover td { background: var(--s2); }
+.tbl .mini-bar { height:6px; width:70px; background:#111318; border-radius:3px; overflow:hidden; display:inline-block; vertical-align:middle; }
+.tbl .mini-bar i { display:block; height:100%; }
+
+/* source cards */
+.src-card { background:var(--s1); border:1px solid var(--bdr); border-radius:10px; padding:14px; }
+.src-card .sh { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.src-card .sh .em { font-size:20px; }
+.src-card .sh .nm { font-weight:700; font-size:13px; }
+.src-card .sh .st { margin-left:auto; }
+.src-card .row { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin:3px 0; }
+.src-card .row b { color:var(--txt); font-variant-numeric:tabular-nums; }
+.src-card .sfoot { margin-top:10px; display:flex; gap:6px; }
+
+/* rubric */
+.rubric { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.rubric .dim { width:180px; font-size:12px; }
+.rubric .dim small { display:block; color:var(--muted); font-size:10px; }
+.gauge { flex:1; height:22px; background:#111318; border-radius:5px; position:relative; overflow:hidden; }
+.gauge i { display:block; height:100%; border-radius:5px; transition:width .6s; }
+.gauge .thr { position:absolute; top:-3px; bottom:-3px; width:2px; background:#fff; opacity:.5; }
+.rubric .sc { width:80px; text-align:right; font-weight:700; font-size:13px; font-variant-numeric:tabular-nums; }
+
+/* drift chart */
+.legend { display:flex; gap:16px; font-size:11px; color:var(--muted); margin-top:8px; flex-wrap:wrap; }
+.legend span { display:flex; align-items:center; gap:5px; }
+.legend i { width:12px; height:3px; border-radius:2px; display:inline-block; }
+
+.callout { background:#132a44; border:1px solid #1f6feb; border-radius:8px; padding:12px 14px; font-size:12px; color:#cde3ff; margin-bottom:14px; line-height:1.5; }
+.callout b { color:#fff; }
+.tag-src { font-size:9.5px; padding:1px 6px; border-radius:10px; background:var(--s2); border:1px solid var(--bdr); color:var(--muted); }
+.footer-note { font-size:11px; color:var(--muted); margin-top:20px; padding-top:14px; border-top:1px solid var(--bdr); line-height:1.6; }
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:var(--s2);border-radius:5px}::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <h1><span class="dot"></span> KM Eval Rehydration &mdash; Control Plane</h1>
+    <span class="clock" id="clock"></span>
+    <div class="controls">
+      <button class="btn primary" onclick="runSweep()">&#9654; Run Eval Sweep</button>
+      <button class="btn warn" onclick="injectRelease()">&#128640; Product Release</button>
+      <button class="btn warn" onclick="injectCommunity()">&#128172; Community Gap</button>
+      <button class="btn danger" onclick="injectDrift()">&#9889; Simulate Drift</button>
+      <button class="btn" id="pauseBtn" onclick="togglePause()">&#10073;&#10073; Pause</button>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h3>Navigation</h3>
+    <button class="nav-item active" onclick="showPage('control',this)"><span class="icon">&#127917;</span> Control Plane</button>
+    <button class="nav-item" onclick="showPage('rehydrate',this)"><span class="icon">&#128167;</span> Rehydration Pipeline</button>
+    <button class="nav-item" onclick="showPage('sources',this)"><span class="icon">&#129513;</span> Multi-Source Fabric</button>
+    <button class="nav-item" onclick="showPage('gaps',this)"><span class="icon">&#128225;</span> Gap Radar</button>
+    <button class="nav-item" onclick="showPage('drift',this)"><span class="icon">&#128200;</span> Agent Drift &amp; Health</button>
+    <button class="nav-item" onclick="showPage('golden',this)"><span class="icon">&#129351;</span> Golden Baseline</button>
+    <h3>Control Health</h3>
+    <div class="hc"><div class="hc-label">Eval Health Score</div><div class="hc-val" id="hcHealth" style="color:var(--green)">96.2</div><div class="hbar"><div class="fill" id="hcHealthBar" style="width:96%;background:var(--green)"></div></div><div class="hc-sub">weighted across 7 dimensions</div></div>
+    <div class="hc"><div class="hc-label">Gaps Caught Ahead-of-Time</div><div class="hc-val" id="hcGaps" style="color:var(--accent)">184</div><div class="hc-sub" id="hcGapsSub">avg lead time 3.8 days before customer hit</div></div>
+    <div class="hc"><div class="hc-label">Agents Green</div><div class="hc-val" id="hcAgents">5 / 6</div><div class="hc-sub" id="hcAgentsSub">1 amber &middot; drift within tolerance</div></div>
+    <div class="hc"><div class="hc-label">Live Model Drift (PSI)</div><div class="hc-val" id="hcDrift" style="color:var(--orange)">0.14</div><div class="hbar"><div class="fill" id="hcDriftBar" style="width:47%;background:var(--orange)"></div></div><div class="hc-sub">alert &ge; 0.25 &middot; retrain &ge; 0.30</div></div>
+  </div>
+
+  <div class="main">
+    <!-- ============ CONTROL PLANE ============ -->
+    <div class="page active" id="page-control">
+      <div class="page-title">Control Plane &mdash; Real-Time Eval Rehydration</div>
+      <div class="page-sub">Evals are the <b>control layer</b> for Knowledge Management. Whenever a gap is detected across any source &mdash; a product release, a community thread, a new ADO fix &mdash; the matching eval set is <b>rehydrated and re-run automatically, ahead of time</b>, so KM is verified against &ldquo;what good looks like&rdquo; <i>before</i> a customer ever asks. This dashboard is the live cockpit for that loop.</div>
+
+      <div class="kpi-grid" id="ctrlKpis"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>&#128167; Rehydration Pipeline <span class="r badge info" id="pipeState">idle</span></h3>
+          <div class="pipe" id="ctrlPipe"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px" id="pipeCaption">Detect a gap &rarr; regenerate eval cases from the source &rarr; run agents &rarr; score vs golden &rarr; promote or remediate.</div>
+        </div>
+        <div class="card">
+          <h3>&#129351; Eval Health by Dimension</h3>
+          <div id="ctrlDims"></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>&#128225; Live Event Stream <span class="r" style="color:var(--green);font-size:10px">&#9679; streaming</span></h3>
+          <div class="stream" id="stream"></div>
+        </div>
+        <div class="card">
+          <h3>&#129513; Source Contribution to Eval Corpus</h3>
+          <div id="ctrlSources"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ REHYDRATION PIPELINE ============ -->
+    <div class="page" id="page-rehydrate">
+      <div class="page-title">Rehydration Pipeline</div>
+      <div class="page-sub">A closed control loop. Each detected gap spawns a <b>rehydration job</b>: fresh eval cases are synthesized from the triggering source + golden rubric, the KM agents are executed against them, results are scored, and only passing content is promoted. Failing sets open a remediation task and hold the gap in a tested-but-quarantined state.</div>
+
+      <div class="callout" id="jobCallout">No active job. Trigger a <b>Product Release</b>, <b>Community Gap</b>, or <b>Run Eval Sweep</b> from the top bar to watch a rehydration job flow through the pipeline in real time.</div>
+
+      <div class="card">
+        <h3>&#9881;&#65039; Job Flow</h3>
+        <div class="pipe" id="rehyPipe"></div>
+      </div>
+
+      <div class="card">
+        <h3>&#128203; Rehydration Job Queue <span class="r" id="queueCount" style="font-size:11px;color:var(--muted)"></span></h3>
+        <div style="overflow-x:auto"><table class="tbl" id="jobTable"></table></div>
+      </div>
+    </div>
+
+    <!-- ============ MULTI-SOURCE FABRIC ============ -->
+    <div class="page" id="page-sources">
+      <div class="page-title">Multi-Source Eval Fabric</div>
+      <div class="page-sub">Evals are hydrated from <b>six independent dimensions</b>. No single source defines truth &mdash; the golden dataset anchors correctness, while the others supply coverage, recency, and real-world phrasing. Each source is independently monitored for freshness and open gaps, and can be rehydrated on demand.</div>
+      <div class="grid3" id="srcCards"></div>
+      <div class="card">
+        <h3>&#128202; Eval Cases Contributed per Source</h3>
+        <div id="srcBars"></div>
+      </div>
+    </div>
+
+    <!-- ============ GAP RADAR ============ -->
+    <div class="page" id="page-gaps">
+      <div class="page-title">Gap Radar &mdash; Detected Ahead of Time</div>
+      <div class="page-sub">Gaps are surfaced <b>before</b> they reach a customer by continuously diffing live sources against the KM graph and golden coverage map. Each gap carries a projected <b>lead time</b> (how far ahead of first customer contact we caught it) and an auto-generated rehydration plan.</div>
+      <div class="kpi-grid" id="gapKpis"></div>
+      <div class="card">
+        <h3>&#128680; Open Gaps &mdash; Ranked by Blast Radius</h3>
+        <div style="overflow-x:auto"><table class="tbl" id="gapTable"></table></div>
+      </div>
+    </div>
+
+    <!-- ============ AGENT DRIFT & HEALTH ============ -->
+    <div class="page" id="page-drift">
+      <div class="page-title">Agent Drift &amp; Health</div>
+      <div class="page-sub">Every KM agent is scored on each eval sweep. We track <b>rolling quality</b>, <b>model drift</b> (population stability index on output embeddings), latency and cost. Drift crossing the alert band flags a model for review; crossing the retrain band auto-opens a remediation job.</div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>&#128200; Model Drift &amp; Rolling Groundedness <span class="r" style="font-size:10px;color:var(--muted)">last 40 sweeps</span></h3>
+          <svg id="driftChart" viewBox="0 0 600 240" style="width:100%;height:240px"></svg>
+          <div class="legend">
+            <span><i style="background:var(--accent)"></i> Groundedness %</span>
+            <span><i style="background:var(--purple)"></i> Answer correctness %</span>
+            <span><i style="background:var(--orange)"></i> Drift (PSI &times;100)</span>
+            <span><i style="background:var(--red);opacity:.6"></i> Alert band</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>&#129302; Agent Scorecards</h3>
+          <div id="agentCards"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>&#128202; Per-Agent Metrics</h3>
+        <div style="overflow-x:auto"><table class="tbl" id="agentTable"></table></div>
+      </div>
+    </div>
+
+    <!-- ============ GOLDEN BASELINE ============ -->
+    <div class="page" id="page-golden">
+      <div class="page-title">Golden Baseline &mdash; &ldquo;What Good Looks Like&rdquo;</div>
+      <div class="page-sub">The golden dataset is the human-verified contract for a correct answer: expected resolution, required citations, tone, and safety. Every rehydrated eval is scored against these <b>dimension thresholds</b>. A response must clear every gate to be promoted &mdash; the white marker on each gauge is the pass threshold.</div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>&#127919; Scoring Rubric vs Thresholds</h3>
+          <div id="goldenRubric"></div>
+        </div>
+        <div class="card">
+          <h3>&#129351; Golden Case Example</h3>
+          <div style="font-size:12px;line-height:1.6">
+            <div class="tag-src">golden #G-0442 &middot; Entra Seamless SSO</div>
+            <p style="margin-top:10px;color:var(--muted)">Query</p>
+            <div style="background:#111318;border-radius:6px;padding:8px 10px;margin-top:3px">&ldquo;Seamless SSO stopped working after our on-prem servers were rebuilt &mdash; users get repeated prompts.&rdquo;</div>
+            <p style="margin-top:10px;color:var(--muted)">Expected resolution <span class="badge pass">GOLDEN</span></p>
+            <div style="background:#111318;border-radius:6px;padding:8px 10px;margin-top:3px">Kerberos decryption failure (81002/81008). Re-create the <code>AZUREADSSOACC</code> computer object &amp; roll the key; verify <b>device time sync within 5&nbsp;min</b> via <code>w32tm /resync</code>.</div>
+            <p style="margin-top:10px;color:var(--muted)">Required citations</p>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="tag-src">learn.microsoft.com/&hellip;/tshoot-connect-sso</span>
+              <span class="tag-src">ADO#48122 fix</span>
+            </div>
+            <p style="margin-top:10px;color:var(--muted)">Gates &mdash; must all pass</p>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="badge pass">grounded &ge;.90</span><span class="badge pass">faithful &ge;.95</span><span class="badge pass">correct &ge;.90</span><span class="badge pass">fresh &le;30d</span><span class="badge pass">safe = pass</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">
+        <b>How the control loop stays honest:</b> the golden set is version-controlled and only expanded through review; rehydrated cases from community / releases / ADO are scored <i>against</i> it, never allowed to redefine it. When a rehydrated case reveals the golden itself is stale (e.g., a new release deprecates a step), it is flagged for golden-set promotion rather than silently accepted &mdash; keeping &ldquo;what good looks like&rdquo; both current and controlled.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+const SOURCES = [
+  {id:'golden',   em:'&#129351;', nm:'Golden Dataset',    color:'#f0b400', cases:342,  fresh:99, gaps:1,  desc:'Human-verified Q&A + expected citations'},
+  {id:'similar',  em:'&#129513;', nm:'Similar Cases',     color:'#39d0d8', cases:1208, fresh:88, gaps:4,  desc:'Resolved tickets clustered by intent'},
+  {id:'community',em:'&#128172;', nm:'Community Content',  color:'#bc8cff', cases:964,  fresh:72, gaps:9,  desc:'Forums, Q&A, MVP blogs'},
+  {id:'ado',      em:'&#129683;', nm:'ADO Work Items',     color:'#58a6ff', cases:611,  fresh:81, gaps:5,  desc:'Bugs, known issues, shipped fixes'},
+  {id:'training', em:'&#127891;', nm:'Training / Enablement',color:'#3fb950',cases:210, fresh:76, gaps:3,  desc:'Internal enablement modules'},
+  {id:'release',  em:'&#128640;', nm:'Product Releases',   color:'#f778ba', cases:288,  fresh:69, gaps:7,  desc:'Release notes, changelogs, deprecations'},
+];
+const DIMS = [
+  {nm:'Groundedness',   sub:'answer traces to a cited node', score:96, thr:90, color:'#3fb950'},
+  {nm:'Faithfulness',   sub:'no unsupported claims',         score:97, thr:95, color:'#3fb950'},
+  {nm:'Answer correctness',sub:'matches golden resolution',  score:94, thr:90, color:'#3fb950'},
+  {nm:'Intent match',   sub:'right problem identified',      score:95, thr:88, color:'#3fb950'},
+  {nm:'Freshness',      sub:'sources within SLA window',     score:83, thr:80, color:'#d29922'},
+  {nm:'Coverage',       sub:'KM has any grounded answer',    score:91, thr:85, color:'#3fb950'},
+  {nm:'Safety / compliance',sub:'no unsafe guidance',        score:100,thr:100,color:'#3fb950'},
+];
+const AGENTS = [
+  {nm:'Release Watcher',   role:'ingests release notes',      g:95, drift:0.09, lat:640,  cost:0.4, cases:288, st:'GREEN'},
+  {nm:'Community Miner',   role:'harvests forum/MVP content', g:88, drift:0.21, lat:1180, cost:0.9, cases:964, st:'AMBER'},
+  {nm:'Diagnosis Agent',   role:'intent + root-cause',        g:94, drift:0.11, lat:820,  cost:0.7, cases:1208,st:'GREEN'},
+  {nm:'Grounding Agent',   role:'answer synthesis + cite',    g:96, drift:0.07, lat:910,  cost:1.1, cases:342, st:'GREEN'},
+  {nm:'Graph Curator',     role:'writes nodes/edges',         g:97, drift:0.05, lat:430,  cost:0.3, cases:611, st:'GREEN'},
+  {nm:'Eval Judge',        role:'scores vs golden',           g:98, drift:0.06, lat:360,  cost:0.2, cases:210, st:'GREEN'},
+];
+const STAGES = [
+  {ic:'&#128225;', nm:'DETECT',    key:'detect'},
+  {ic:'&#128167;', nm:'REHYDRATE', key:'rehydrate'},
+  {ic:'&#129302;', nm:'RUN AGENTS',key:'run'},
+  {ic:'&#129351;', nm:'SCORE',     key:'score'},
+  {ic:'&#9989;',   nm:'PROMOTE',   key:'promote'},
+];
+let jobs = [];
+let gaps = [
+  {id:'G-2201', src:'release',  title:'Entra Connect v2.4 deprecates legacy PTA agent', sev:'High',   lead:'5.2d', cases:24, status:'REHYDRATING'},
+  {id:'G-2198', src:'community',title:'Spike: Teams "we ran into a problem" post-update', sev:'High',  lead:'2.1d', cases:31, status:'TESTED'},
+  {id:'G-2190', src:'ado',      title:'ADO#48122 fix changes SSO key-roll steps',        sev:'Medium', lead:'4.0d', cases:12, status:'PROMOTED'},
+  {id:'G-2185', src:'similar',  title:'Cluster of Intune enrollment 0x80180014 tickets', sev:'Medium', lead:'3.3d', cases:18, status:'TESTED'},
+  {id:'G-2179', src:'training', title:'Enablement module missing new Conditional Access UI',sev:'Low', lead:'6.1d', cases:7,  status:'REHYDRATING'},
+];
+let health = 96.2, driftPSI = 0.14, gapsCaught = 184, evalRuns = 12840;
+let paused = false;
+let driftHist = { g:[], c:[], d:[] };
+for(let i=0;i<40;i++){ driftHist.g.push(94+Math.sin(i/3)*2+Math.random()*1.5); driftHist.c.push(91+Math.cos(i/4)*2+Math.random()*1.5); driftHist.d.push(10+Math.sin(i/5)*3+Math.random()*2); }
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const srcOf = id => SOURCES.find(s=>s.id===id);
+const now = () => { const d=new Date(); return d.toTimeString().slice(0,8); };
+function statusBadge(s){ const m={REHYDRATING:'warn',TESTED:'info',PROMOTED:'pass',FAILED:'fail',QUEUED:'purple'}; return `<span class="badge ${m[s]||'info'}">${s}</span>`; }
+
+/* ---------------- render: control plane ---------------- */
+function renderCtrlKpis(){
+  const k=[
+    {v:health.toFixed(1),l:'Eval Health Score',d:'+0.4 vs last sweep',c:'up',col:'var(--green)'},
+    {v:gapsCaught,l:'Gaps Caught Ahead-of-Time',d:'avg lead 3.8d',c:'up',col:'var(--accent)'},
+    {v:evalRuns.toLocaleString(),l:'Eval Cases Run (30d)',d:'auto-rehydrated',c:'neutral',col:'var(--txt)'},
+    {v:driftPSI.toFixed(2),l:'Live Model Drift (PSI)',d:driftPSI>=0.25?'ALERT':'within tolerance',c:driftPSI>=0.25?'down':'neutral',col:driftPSI>=0.25?'var(--red)':'var(--orange)'},
+    {v:'5/6',l:'Agents Green',d:'Community Miner amber',c:'neutral',col:'var(--txt)'},
+    {v:'99.1%',l:'Promote-on-Pass Rate',d:'blocked 0.9% at gate',c:'up',col:'var(--green)'},
+  ];
+  $('ctrlKpis').innerHTML=k.map(x=>`<div class="kpi"><div class="kpi-val" style="color:${x.col}">${x.v}</div><div class="kpi-label">${x.l}</div><div class="kpi-delta ${x.c}">${x.d}</div></div>`).join('');
+}
+function renderDims(el){
+  el.innerHTML=DIMS.map(d=>`<div class="rubric"><div class="dim">${d.nm}<small>${d.sub}</small></div><div class="gauge"><i style="width:${d.score}%;background:${d.color}"></i><div class="thr" style="left:${d.thr}%"></div></div><div class="sc" style="color:${d.score>=d.thr?'var(--green)':'var(--orange)'}">${d.score}${d.nm.includes('Freshness')?'':'%'}</div></div>`).join('');
+}
+function renderPipe(el,hot){
+  let h='';
+  STAGES.forEach((s,i)=>{
+    const cls = hot===s.key?'hot':(hot&&STAGES.findIndex(x=>x.key===hot)>i?'ok':'');
+    const cnt = {detect:gaps.length,rehydrate:jobs.filter(j=>j.stage==='rehydrate').length,run:jobs.filter(j=>j.stage==='run').length,score:jobs.filter(j=>j.stage==='score').length,promote:jobs.filter(j=>j.stage==='promote').length}[s.key];
+    h+=`<div class="stage ${cls}"><div class="s-ic">${s.ic}</div><div class="s-nm">${s.nm}</div><div class="s-ct">${cnt||0}</div></div>`;
+    if(i<STAGES.length-1) h+=`<div class="pipe-arrow">&#8594;</div>`;
+  });
+  el.innerHTML=h;
+}
+function renderCtrlSources(){
+  const max=Math.max(...SOURCES.map(s=>s.cases));
+  $('ctrlSources').innerHTML=SOURCES.map(s=>`<div class="bar-row"><div class="bar-label">${s.em} ${s.nm}</div><div class="bar-track"><div class="bar-fill" style="width:${s.cases/max*100}%;background:${s.color}">${s.cases}</div></div><div class="bar-count">${s.gaps} gap${s.gaps!==1?'s':''}</div></div>`).join('');
+}
+
+/* ---------------- render: sources ---------------- */
+function renderSrcCards(){
+  $('srcCards').innerHTML=SOURCES.map(s=>{
+    const fst = s.fresh>=85?'FRESH':s.fresh>=70?'AGING':'STALE';
+    return `<div class="src-card"><div class="sh"><span class="em">${s.em}</span><span class="nm">${s.nm}</span><span class="st"><span class="badge ${fst}">${fst}</span></span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${s.desc}</div>
+    <div class="row"><span>Eval cases</span><b>${s.cases.toLocaleString()}</b></div>
+    <div class="row"><span>Freshness</span><b>${s.fresh}%</b></div>
+    <div class="row"><span>Open gaps</span><b style="color:${s.gaps>6?'var(--red)':s.gaps>3?'var(--orange)':'var(--green)'}">${s.gaps}</b></div>
+    <div class="hbar"><div class="fill" style="width:${s.fresh}%;background:${s.color}"></div></div>
+    <div class="sfoot"><button class="btn" style="flex:1" onclick="rehydrateSource('${s.id}')">&#128167; Rehydrate</button></div></div>`;
+  }).join('');
+}
+function renderSrcBars(){
+  const max=Math.max(...SOURCES.map(s=>s.cases));
+  $('srcBars').innerHTML=SOURCES.map(s=>`<div class="bar-row"><div class="bar-label">${s.em} ${s.nm}</div><div class="bar-track"><div class="bar-fill" style="width:${s.cases/max*100}%;background:${s.color}">${s.cases.toLocaleString()}</div></div><div class="bar-count">${s.fresh}%</div></div>`).join('');
+}
+
+/* ---------------- render: gaps ---------------- */
+function renderGapKpis(){
+  const k=[
+    {v:gaps.length,l:'Open Gaps',col:'var(--orange)'},
+    {v:gaps.filter(g=>g.sev==='High').length,l:'High Severity',col:'var(--red)'},
+    {v:'3.8d',l:'Avg Lead Time',col:'var(--green)'},
+    {v:gaps.filter(g=>g.status==='PROMOTED').length,l:'Rehydrated &amp; Promoted',col:'var(--accent)'},
+  ];
+  $('gapKpis').innerHTML=k.map(x=>`<div class="kpi"><div class="kpi-val" style="color:${x.col}">${x.v}</div><div class="kpi-label">${x.l}</div></div>`).join('');
+}
+function renderGapTable(){
+  const rows=gaps.map(g=>{const s=srcOf(g.src);const sc={High:'fail',Medium:'warn',Low:'pass'}[g.sev];
+    return `<tr><td><b>${g.id}</b></td><td><span class="tag-src">${s.em} ${s.nm}</span></td><td>${g.title}</td><td><span class="badge ${sc}">${g.sev}</span></td><td style="color:var(--green);font-weight:600">${g.lead}</td><td>${g.cases}</td><td>${statusBadge(g.status)}</td></tr>`;}).join('');
+  $('gapTable').innerHTML=`<thead><tr><th>Gap</th><th>Source</th><th>Description</th><th>Severity</th><th>Lead time</th><th>Eval cases</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+/* ---------------- render: drift ---------------- */
+function renderAgentCards(){
+  $('agentCards').innerHTML=AGENTS.map(a=>`<div class="rubric" style="margin-bottom:12px"><div class="dim">${a.nm}<small>${a.role}</small></div><div class="gauge"><i style="width:${a.g}%;background:${a.st==='GREEN'?'var(--green)':a.st==='AMBER'?'var(--orange)':'var(--red)'}"></i></div><div class="sc"><span class="badge ${a.st}">${a.g}%</span></div></div>`).join('');
+}
+function renderAgentTable(){
+  const rows=AGENTS.map(a=>{const dc=a.drift>=0.25?'var(--red)':a.drift>=0.15?'var(--orange)':'var(--green)';
+    return `<tr><td><b>${a.nm}</b></td><td style="color:var(--muted)">${a.role}</td><td><span class="mini-bar"><i style="width:${a.g}%;background:${a.st==='GREEN'?'var(--green)':'var(--orange)'}"></i></span> ${a.g}%</td><td style="color:${dc};font-weight:600">${a.drift.toFixed(2)}</td><td>${a.lat}ms</td><td>$${a.cost.toFixed(1)}/1k</td><td>${a.cases.toLocaleString()}</td><td><span class="badge ${a.st}">${a.st}</span></td></tr>`;}).join('');
+  $('agentTable').innerHTML=`<thead><tr><th>Agent</th><th>Role</th><th>Rolling quality</th><th>Drift (PSI)</th><th>p50 latency</th><th>Cost</th><th>Eval cases</th><th>Status</th></tr></thead><tbody>${rows}</tbody>`;
+}
+function renderDriftChart(){
+  const W=600,H=240,pad=30,n=driftHist.g.length;
+  const x=i=>pad+(W-2*pad)*i/(n-1);
+  const yq=v=>H-pad-(H-2*pad)*(v-60)/40;   // quality 60..100
+  const yd=v=>H-pad-(H-2*pad)*v/40;         // drift 0..40 (PSI*100)
+  const line=(arr,f)=>arr.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${f(v).toFixed(1)}`).join(' ');
+  const alertY=yd(25);
+  let svg=`<rect x="0" y="0" width="${W}" height="${H}" fill="#111318" rx="8"/>`;
+  for(let g=70;g<=100;g+=10){ svg+=`<line x1="${pad}" y1="${yq(g)}" x2="${W-pad}" y2="${yq(g)}" stroke="#21262d"/><text x="4" y="${yq(g)+3}" fill="#8b949e" font-size="9">${g}%</text>`; }
+  svg+=`<line x1="${pad}" y1="${alertY}" x2="${W-pad}" y2="${alertY}" stroke="#f85149" stroke-dasharray="4 4" opacity=".6"/><text x="${W-pad-58}" y="${alertY-4}" fill="#f85149" font-size="9">drift alert .25</text>`;
+  svg+=`<path d="${line(driftHist.d,yd)}" fill="none" stroke="#d29922" stroke-width="2"/>`;
+  svg+=`<path d="${line(driftHist.c,yq)}" fill="none" stroke="#bc8cff" stroke-width="2"/>`;
+  svg+=`<path d="${line(driftHist.g,yq)}" fill="none" stroke="#58a6ff" stroke-width="2.5"/>`;
+  const li=n-1;
+  svg+=`<circle cx="${x(li)}" cy="${yq(driftHist.g[li])}" r="3.5" fill="#58a6ff"/>`;
+  $('driftChart').innerHTML=svg;
+}
+
+/* ---------------- render: jobs ---------------- */
+function renderJobTable(){
+  $('queueCount').textContent=`${jobs.length} active`;
+  if(!jobs.length){ $('jobTable').innerHTML=`<thead><tr><th>Job</th><th>Trigger</th><th>Source</th><th>Stage</th><th>Cases</th><th>Score</th><th>Result</th></tr></thead><tbody><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No active jobs &mdash; trigger an event above.</td></tr></tbody>`; return; }
+  const rows=jobs.map(j=>{const s=srcOf(j.src);const stg=STAGES.find(x=>x.key===j.stage);
+    return `<tr><td><b>${j.id}</b></td><td>${j.trigger}</td><td><span class="tag-src">${s.em} ${s.nm}</span></td><td><span class="badge ${j.stage==='promote'?'pass':'warn'}">${stg.nm}</span></td><td>${j.cases}</td><td>${j.score?j.score+'%':'&mdash;'}</td><td>${j.result?statusBadge(j.result):'<span class="badge purple">RUNNING</span>'}</td></tr>`;}).join('');
+  $('jobTable').innerHTML=`<thead><tr><th>Job</th><th>Trigger</th><th>Source</th><th>Stage</th><th>Cases</th><th>Score</th><th>Result</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+/* ---------------- event stream ---------------- */
+const evColors={detect:'var(--orange)',rehydrate:'var(--accent)',run:'var(--purple)',score:'var(--teal)',promote:'var(--green)',drift:'var(--red)',info:'var(--muted)'};
+function pushEvent(ic,msg,type){
+  const el=$('stream'); if(!el) return;
+  const tag = type?`<span class="tag" style="background:${evColors[type]||'#333'}22;color:${evColors[type]||'#999'}">${type}</span>`:'';
+  const div=document.createElement('div'); div.className='ev';
+  div.innerHTML=`<span class="t">${now()}</span><span class="ic">${ic}</span><span class="msg">${msg}${tag}</span>`;
+  el.insertBefore(div,el.firstChild);
+  while(el.children.length>40) el.removeChild(el.lastChild);
+}
+
+/* ---------------- job lifecycle ---------------- */
+let jobSeq=2202;
+function spawnJob(srcId,trigger,title){
+  const s=srcOf(srcId); const cases=8+Math.floor(Math.random()*28);
+  const job={id:'J-'+(jobSeq++),src:srcId,trigger,title,stage:'rehydrate',cases,score:null,result:null};
+  jobs.unshift(job);
+  gaps.unshift({id:'G-'+(2200+Math.floor(Math.random()*99)),src:srcId,title,sev:Math.random()>0.5?'High':'Medium',lead:(2+Math.random()*4).toFixed(1)+'d',cases,status:'REHYDRATING'});
+  if(gaps.length>9) gaps.pop();
+  pushEvent('&#128225;',`Gap detected in <b>${s.nm}</b>: ${title}`,'detect');
+  s.gaps++; s.cases+=cases;
+  refreshAll();
+  // advance through stages
+  const seq=['rehydrate','run','score','promote'];
+  let i=0;
+  const adv=()=>{
+    if(paused){ setTimeout(adv,900); return; }
+    job.stage=seq[Math.min(i,seq.length-1)];
+    if(job.stage==='rehydrate') pushEvent('&#128167;',`Rehydrated <b>${cases}</b> eval cases from ${s.nm} + golden rubric`,'rehydrate');
+    if(job.stage==='run') pushEvent('&#129302;',`Running KM agents against <b>J-${job.id.split('-')[1]}</b>&hellip;`,'run');
+    if(job.stage==='score'){ job.score=88+Math.floor(Math.random()*11); pushEvent('&#129351;',`Scored vs golden: <b>${job.score}%</b>`,'score'); }
+    if(job.stage==='promote'){
+      const pass=job.score>=90;
+      job.result=pass?'PROMOTED':'FAILED';
+      if(pass){ gapsCaught++; pushEvent('&#9989;',`<b>Promoted</b> &mdash; KM verified for &ldquo;${title}&rdquo; ahead of customer hit`,'promote'); }
+      else pushEvent('&#9888;&#65039;',`<b>Held &amp; remediation opened</b> &mdash; score ${job.score}% below gate for ${s.nm}`,'detect');
+      setTimeout(()=>{ jobs=jobs.filter(j=>j!==job); refreshAll(); },4000);
+    }
+    refreshAll();
+    i++;
+    if(i<=seq.length) setTimeout(adv,1100+Math.random()*500);
+  };
+  setTimeout(adv,700);
+}
+function rehydrateSource(id){ const s=srcOf(id); spawnJob(id,'manual',`Manual rehydration sweep of ${s.nm}`); showPageById('rehydrate'); }
+
+/* ---------------- top-bar controls ---------------- */
+function runSweep(){
+  pushEvent('&#9654;','<b>Full eval sweep</b> started across all six sources','info');
+  const picks=['similar','community','release']; picks.forEach((p,i)=>setTimeout(()=>spawnJob(p,'sweep',`Sweep coverage check &mdash; ${srcOf(p).nm}`),i*500));
+}
+function injectRelease(){ spawnJob('release','release','Entra Connect v2.4.1 &mdash; new hybrid-join step + deprecation'); }
+function injectCommunity(){ spawnJob('community','community','Trending thread: MFA number-match failing on iOS 18.5'); }
+function injectDrift(){
+  const a=AGENTS.find(x=>x.nm==='Community Miner'); a.drift=Math.min(0.34,a.drift+0.09); a.g=Math.max(74,a.g-6);
+  driftPSI=Math.min(0.34,driftPSI+0.06);
+  a.st=a.drift>=0.30?'RED':a.drift>=0.20?'AMBER':'GREEN';
+  driftHist.g.push(driftHist.g[driftHist.g.length-1]-4-Math.random()*3); driftHist.g.shift();
+  driftHist.d.push(driftPSI*100+Math.random()*3); driftHist.d.shift();
+  driftHist.c.push(driftHist.c[driftHist.c.length-1]-3); driftHist.c.shift();
+  pushEvent('&#9889;',`<b>Drift detected</b> &mdash; ${a.nm} PSI ${a.drift.toFixed(2)} ${a.drift>=0.30?'&rarr; auto-retrain job opened':'&rarr; flagged for review'}`,'drift');
+  if(a.drift>=0.30) setTimeout(()=>spawnJob('community','drift-retrain','Retrain + re-eval Community Miner on golden regression set'),800);
+  refreshAll();
+}
+function togglePause(){ paused=!paused; $('pauseBtn').innerHTML=paused?'&#9654; Resume':'&#10073;&#10073; Pause'; document.querySelector('.dot').style.animationPlayState=paused?'paused':'running'; }
+
+/* ---------------- ambient sim ---------------- */
+function ambient(){
+  if(paused) return;
+  const r=Math.random();
+  if(r<0.30){ const s=SOURCES[Math.floor(Math.random()*SOURCES.length)]; pushEvent(s.em,`${(1+Math.floor(Math.random()*40))} new signals ingested from <b>${s.nm}</b>`,'info'); s.cases+=Math.floor(Math.random()*5); }
+  else if(r<0.5){ pushEvent('&#129351;',`Continuous eval: <b>${(20+Math.floor(Math.random()*80))}</b> cases scored &mdash; ${(94+Math.floor(Math.random()*5))}% pass`,'score'); evalRuns+=Math.floor(Math.random()*90); }
+  else if(r<0.62){ injectDriftTick(); }
+  // gently recover drift
+  const cm=AGENTS.find(x=>x.nm==='Community Miner'); if(cm.drift>0.21){ cm.drift=Math.max(0.21,cm.drift-0.004); }
+  if(driftPSI>0.14) driftPSI=Math.max(0.14,driftPSI-0.003);
+  driftHist.g.push(Math.min(98,driftHist.g[driftHist.g.length-1]+ (Math.random()-0.45))); driftHist.g.shift();
+  driftHist.c.push(Math.min(97,Math.max(80,driftHist.c[driftHist.c.length-1]+(Math.random()-0.5)))); driftHist.c.shift();
+  driftHist.d.push(Math.max(8,driftPSI*100+(Math.random()-0.5)*3)); driftHist.d.shift();
+  refreshAll();
+}
+function injectDriftTick(){ /* subtle noise only */ }
+
+/* ---------------- refresh + nav ---------------- */
+function refreshAll(){
+  renderCtrlKpis(); renderDims($('ctrlDims')); renderPipe($('ctrlPipe'), jobs.length?jobs[0].stage:null); renderCtrlSources();
+  renderSrcCards(); renderSrcBars();
+  renderGapKpis(); renderGapTable();
+  renderAgentCards(); renderAgentTable(); renderDriftChart();
+  renderRubric(); renderJobTable(); renderPipe($('rehyPipe'), jobs.length?jobs[0].stage:null);
+  // sidebar health
+  $('hcHealth').textContent=health.toFixed(1);
+  $('hcGaps').textContent=gapsCaught;
+  $('hcDrift').textContent=driftPSI.toFixed(2);
+  $('hcDrift').style.color=driftPSI>=0.25?'var(--red)':'var(--orange)';
+  $('hcDriftBar').style.width=Math.min(100,driftPSI/0.3*100)+'%';
+  $('hcDriftBar').style.background=driftPSI>=0.25?'var(--red)':'var(--orange)';
+  const green=AGENTS.filter(a=>a.st==='GREEN').length; $('hcAgents').textContent=`${green} / 6`;
+  $('pipeState').textContent=jobs.length?`${jobs.length} active job${jobs.length>1?'s':''}`:'idle';
+  $('pipeState').className='r badge '+(jobs.length?'warn':'info');
+  const active=jobs[0];
+  if(active) $('jobCallout').innerHTML=`Active job <b>${active.id}</b> (${active.trigger}) &mdash; ${srcOf(active.src).nm}: <b>${active.title}</b>. Stage: <b>${STAGES.find(s=>s.key===active.stage).nm}</b>${active.score?`, score ${active.score}%`:''}.`;
+}
+function renderRubric(){
+  $('goldenRubric').innerHTML=DIMS.map(d=>`<div class="rubric"><div class="dim">${d.nm}<small>${d.sub}</small></div><div class="gauge"><i style="width:${d.score}%;background:${d.color}"></i><div class="thr" style="left:${d.thr}%"></div></div><div class="sc" style="color:${d.score>=d.thr?'var(--green)':'var(--orange)'}">${d.score}${d.nm.includes('Freshness')?'':'%'}</div></div>`).join('');
+}
+function showPage(id,btn){ showPageById(id); if(btn){ document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); btn.classList.add('active'); } }
+function showPageById(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{ if(n.getAttribute('onclick').includes(`'${id}'`)){ document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); n.classList.add('active'); }});
+}
+
+/* ---------------- boot ---------------- */
+function tickClock(){ $('clock').textContent='UTC '+new Date().toISOString().slice(11,19); }
+refreshAll();
+pushEvent('&#127917;','Control plane online &mdash; monitoring 6 sources, 12,840 eval cases','info');
+pushEvent('&#129351;','Golden baseline loaded: 342 verified cases, 7 gates','info');
+setInterval(tickClock,1000); tickClock();
+setInterval(ambient,2600);
+if(location.hash){ const id=location.hash.slice(1); if($('page-'+id)) showPageById(id); }
+window.addEventListener('hashchange',()=>{ const id=location.hash.slice(1); if($('page-'+id)) showPageById(id); });
+setInterval(()=>{ health=Math.min(98.5,Math.max(94,health+(Math.random()-0.48)*0.2)); },5000);
+</script>
+</body>
+</html>
