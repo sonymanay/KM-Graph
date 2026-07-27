@@ -163,7 +163,7 @@
       <div class="step" id="s4"><h4>4 · Grounded answer · <span id="chLabel">Case</span></h4>
         <div class="body"><div class="ans" id="ans">—</div><div class="cite" id="cite"></div></div>
       </div>
-      <div class="flag" id="flag">⚠ Reflection guardrail: a candidate claim is low-confidence / contradicted. Held for evidence or human review before it reaches the customer.</div>
+      <div class="flag" id="flag">⚠ Reflection guardrail: a candidate claim is low-confidence / contradicted. Held for additional evidence and automated re-verification before it reaches the customer.</div>
     </div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)">
       <input type="checkbox" id="govOff"/> Simulate an unverified claim (show guardrail)
@@ -223,7 +223,7 @@
   <!-- Self-evolving Microsoft Learn article -->
   <div class="card">
     <h2>Self-Evolving Content — a real Microsoft Learn article updates from a customer query</h2>
-    <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">When the case miners and community crawler detect that a recurring query isn&rsquo;t fully answered by existing content, the system drafts an update, an SME validates it, and the published article version increments — so the next customer gets the better answer.</p>
+    <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">When the case miners and community crawler detect that a recurring query isn&rsquo;t fully answered by existing content, the system autonomously drafts, self-validates (reflection + provenance), and publishes the update, and the article version increments — so the next customer gets the better answer.</p>
     <div class="concept-grid">
       <div>
         <div class="vtabs">
@@ -328,7 +328,7 @@ function ingestCommunity(){
   const id="int"+commCount;
   addNode({id,label:"Trending Q",x:60+Math.random()*40,y:60+Math.random()*30,type:"intent"},"sym");
   log("Community Crawler: new trending question detected → scanning corpus…","b");
-  setTimeout(()=>{log("No adequate content found → drafting new asset & flagging for SME","a");bumpCoverage();},700);
+  setTimeout(()=>{log("No adequate content found → auto-drafting & publishing new asset","a");bumpCoverage();},700);
 }
 let ver=1;
 function ingestRelease(){
@@ -336,7 +336,7 @@ function ingestRelease(){
   log("Code/Release Listener: production-bound commit detected","b");
   setTimeout(()=>{
     addNode({id:"rel"+Date.now(),label:"Release 5.4",x:430,y:70,type:"sym"},"prod");
-    log("Mapped change to impacted assets · auto-drafted work-item for SME","g");
+    log("Mapped change to impacted assets · auto-drafted & auto-published content update","g");
     log("PROACTIVE: content prepared before any customer asks (pre-release notes)","g");
     bumpCoverage();
   },700);
@@ -445,12 +445,12 @@ function showVer(v){renderChecklist(v);}
 function regen(){
   log("Case & Telemetry Miner: 312 queries this month match intent 'sso_redirect_loop' · cause = clock skew","b");
   setTimeout(()=>log("Gap detected: checklist lacks a remediation step for time resync → drafting v2","a"),600);
-  setTimeout(()=>{renderChecklist(2);log("SME validated · KB1001 → v2 published · answer accuracy ↑","g");bumpCoverage();},1300);
+  setTimeout(()=>{renderChecklist(2);log("Auto-validated (reflection + provenance) · KB1001 → v2 published · answer accuracy ↑","g");bumpCoverage();},1300);
 }
 document.getElementById("changelog").innerHTML=
   `<div><span class="k">Signal</span> · 312 community + case queries this month matched intent <b>sso_redirect_loop</b> where the diagnosed cause was clock skew.</div>
    <div style="margin-top:6px"><span class="k">Gap detected</span> · the checklist said to <i>ensure</i> time sync but gave no <i>remediation</i> step → 27% of those customers re-contacted.</div>
-   <div style="margin-top:6px"><span class="k">Action</span> · Case &amp; Telemetry Miner + Community Crawler flag the gap → auto-draft the new step → SME reviews &amp; approves → publish as v2.</div>
+   <div style="margin-top:6px"><span class="k">Action</span> · Case &amp; Telemetry Miner + Community Crawler flag the gap → auto-draft the new step → reflection + provenance check → auto-publish as v2.</div>
    <div style="margin-top:6px"><span class="k">Result</span> · Gap Rate for this topic ↓ · first-contact resolution ↑ · graph node KB1001 → v2, confidence for &lsquo;Clock skew&rsquo; ↑ to 94%.</div>`;
 document.getElementById("ansBefore").innerHTML='<div style="font-size:12px;color:#f0b7b0;margin-top:6px"><b>v1 answer:</b> &ldquo;Ensure your device time is synchronized with Active Directory (within five minutes).&rdquo; <i>— customer doesn&rsquo;t know how to resync → re-contacts.</i></div>';
 document.getElementById("ansAfter").innerHTML='<div style="font-size:12px;color:#7fd0b8;margin-top:8px"><b>v2 answer:</b> &ldquo;Your redirect loop matches clock skew (error 81002). Run <code style="color:#8fd0ff;background:#0b1420;border-radius:4px;padding:1px 4px">w32tm /resync</code> on the connector host to resync time to your NTP source, then retry sign-in.&rdquo; <i>— resolved on first contact · traceable to KB1001 v2.</i></div>';
