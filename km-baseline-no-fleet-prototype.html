@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Baseline — Static Knowledge Base without a Multi-Agent Ingestion Fleet (Concept Prototype)</title>
+<style>
+  :root{
+    --bg:#1b1712; --panel:#241f18; --panel2:#2c261d; --ink:#efe7db; --muted:#b0a48f;
+    --line:#4a3f2f; --blue:#2b8fe0; --teal:#17b39a;
+    --amber:#e6a54b; --red:#e0685f; --green:#25b06a; --chip:#352d21; --grey:#6b6152;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#161209,#1b1712);color:var(--ink);}
+  header{padding:18px 24px;border-bottom:1px solid var(--line);background:#14100a;position:sticky;top:0;z-index:5}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .badge{display:inline-block;font-size:11px;color:#1b1712;background:var(--grey);border-radius:10px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+  .badge.warn{background:var(--amber)}
+  .wrap{display:grid;grid-template-columns:300px 1fr 380px;gap:14px;padding:14px;max-width:1600px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card h2{margin:0 0 10px;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#d9c9ae}
+  .row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:8px;font-size:13px}
+  .row .dot{width:9px;height:9px;border-radius:50%;background:var(--grey);flex:none}
+  .row small{display:block;color:var(--muted);font-size:11px}
+  .row.dead{opacity:.55}
+  button{cursor:pointer;font-family:inherit}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;width:100%;margin-top:6px}
+  .btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+  .btn.teal{background:var(--teal)}
+  .btn.amber{background:var(--amber);color:#1b1712}
+  .btn:disabled{background:var(--chip);color:var(--grey);border:1px dashed var(--line);cursor:not-allowed}
+  .btn:active:not(:disabled){transform:translateY(1px)}
+  svg{width:100%;height:520px;display:block}
+  .node text{font-size:11px;font-weight:700;fill:#1b1712}
+  .node.ghost text{fill:#8a7f6d;font-weight:400}
+  .edge{stroke:#6b5c40;stroke-width:1.6}
+  .edge.key{stroke:#8a7f6d;stroke-dasharray:2 3}
+  .edge.ghost{stroke:#5a4f3d;stroke-width:1.4;stroke-dasharray:5 5;opacity:.75}
+  .edge.hot{stroke:var(--amber);stroke-width:3;filter:drop-shadow(0 0 4px var(--amber))}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .swatch{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .swatch.g{border:1.5px dashed #8a7f6d;background:transparent}
+  .log{background:#100c06;border:1px solid var(--line);border-radius:9px;padding:10px;height:150px;overflow:auto;font-family:Consolas,monospace;font-size:12px;line-height:1.5}
+  .log .t{color:#8a7a5f}
+  .log .b{color:var(--blue)} .log .g{color:var(--green)} .log .a{color:var(--amber)} .log .r{color:var(--red)}
+  input[type=text]{width:100%;background:#100c06;border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px;font-size:13px;font-family:inherit}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:5px 10px;font-size:12px;color:#e0d3bd}
+  .chip:hover{border-color:var(--amber)}
+  .step{border-left:2px solid var(--line);padding:8px 0 8px 12px;margin-left:4px;opacity:.35;transition:.35s}
+  .step.on{opacity:1;border-color:var(--amber)}
+  .step h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#d9c9ae}
+  .step .body{font-size:13px;color:var(--ink)}
+  .miss{color:#e0a49b;font-style:italic}
+  .ans{background:#2a2213;border:1px solid #5c4a1c;border-radius:9px;padding:11px;font-size:13px;margin-top:6px;white-space:pre-line}
+  .ans.esc{background:#3a1f1c;border-color:#7a3a33;color:#f0b7b0}
+  .cite{font-size:11px;color:#c9b48a;margin-top:6px}
+  .warnbox{background:#3a1f1c;border:1px solid #7a3a33;border-radius:8px;padding:8px;font-size:12px;color:#f0b7b0;margin-top:8px}
+  .channels{display:flex;gap:6px;margin:8px 0}
+  .channels button{flex:1;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px;font-size:12px}
+  .channels button.on{background:var(--amber);border-color:var(--amber);color:#1b1712}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px;text-align:center}
+  .metric b{display:block;font-size:19px}
+  .metric small{color:var(--muted);font-size:10.5px}
+  .gap b{color:var(--amber)} .cov b{color:var(--grey)} .stale b{color:var(--red)} .recon b{color:var(--red)}
+  .foot{max-width:1600px;margin:0 auto;padding:6px 18px 26px;color:#8a7a5f;font-size:12px}
+  .section{max-width:1600px;margin:0 auto;padding:0 14px 14px}
+  .section > .card{margin-bottom:14px}
+  .cmp{width:100%;border-collapse:collapse;font-size:12.5px}
+  .cmp th,.cmp td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  .cmp th{background:var(--panel2);color:#d9c9ae;text-transform:uppercase;font-size:11px;letter-spacing:.3px}
+  .cmp td.now{color:#e0a49b} .cmp td.fut{color:#7fd0b8}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:2px 0 10px}
+  .note{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:7px;padding:10px 12px;font-size:12.5px;color:var(--ink);line-height:1.55;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Baseline — The Static Knowledge Base <span class="badge warn">No ingestion fleet</span></h1>
+  <p>Same SSO use case, with the Multi-Agent Ingestion Fleet removed. No agents source signals, so the knowledge graph never grows or self-corrects — it degrades into a sparse, stale, keyword-indexed document set. Toggle the ghost overlay to see exactly what the fleet would have added.</p>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: manual pipeline -->
+  <div class="card">
+    <h2>Manual Content Pipeline</h2>
+    <div class="row dead"><span class="dot"></span><div>Content author (human)<small>writes/edits on a schedule</small></div></div>
+    <div class="row dead"><span class="dot"></span><div>Quarterly KB review<small>next review: +3 months</small></div></div>
+    <div class="row dead"><span class="dot"></span><div>Ticket backlog<small>gaps found only after customers complain</small></div></div>
+    <div class="note">There are <b>no</b> Community Crawler, Code/Release Listener, Case &amp; Telemetry Miner, Real-Time Internal Info, or Entity-Resolution agents. Nothing continuously discovers content, extracts entities, or promotes them to the graph.</div>
+    <button class="btn" disabled title="Requires the Multi-Agent Ingestion Fleet">▶ Run the fleet (unavailable)</button>
+    <button class="btn sec" disabled title="Requires the Community Crawler">＋ New community question (unavailable)</button>
+    <button class="btn sec" disabled title="Requires the Code / Release Listener">＋ Product / code change (unavailable)</button>
+    <button class="btn sec" disabled title="Requires the Case &amp; Telemetry Miner">＋ New evidence (unavailable)</button>
+    <h2 style="margin-top:14px">Activity log</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- CENTER: sparse static graph -->
+  <div class="card">
+    <h2>Knowledge Graph — Static / Sparse <span style="text-transform:none;color:var(--muted);font-weight:400">· hand-authored · keyword-linked</span></h2>
+    <svg id="graph" viewBox="0 0 640 520" aria-label="Static knowledge graph"></svg>
+    <div class="legend">
+      <span><i class="swatch" style="background:#efe7db"></i>Product / Symptom (authored)</span>
+      <span><i class="swatch" style="background:#e9d6b6"></i>Static article</span>
+      <span><i class="swatch g"></i>Missing without the fleet</span>
+    </div>
+    <div class="toggle">
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ghostChk" onchange="toggleGhost()"/> Show what the ingestion fleet <b>would</b> add (ghost overlay)</label>
+    </div>
+    <div class="metrics">
+      <div class="metric gap"><b id="mGap">31%</b><small>Gap Rate (stuck, not improving)</small></div>
+      <div class="metric cov"><b id="mCov">69%</b><small>Coverage (flat)</small></div>
+      <div class="metric stale"><b id="mStale">15 mo</b><small>Article staleness</small></div>
+      <div class="metric recon"><b id="mRecon">27%</b><small>Re-contact rate</small></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: degraded understand & resolve -->
+  <div class="card">
+    <h2>Understand &amp; Resolve <span style="text-transform:none;color:var(--muted);font-weight:400">· keyword search only</span></h2>
+    <input id="q" type="text" placeholder="Ask in your own words…" value="Users hit an SSO redirect loop after logging in"/>
+    <div class="chips">
+      <button class="chip" onclick="setQ(this)">SSO redirect loop after login</button>
+      <button class="chip" onclick="setQ(this)">MFA prompt keeps repeating</button>
+      <button class="chip" onclick="setQ(this)">Passkey sign-in fails on iOS 18</button>
+    </div>
+    <div class="channels" id="channels">
+      <button data-ch="phone">📞 Phone</button>
+      <button data-ch="case" class="on">🗂 Case</button>
+      <button data-ch="self">💻 Self-serve</button>
+      <button data-ch="agent">🤖 AI agent</button>
+    </div>
+    <button class="btn amber" onclick="resolve()">Search knowledge base →</button>
+
+    <div id="pipe" style="margin-top:12px">
+      <div class="step" id="s1"><h4>1 · Keyword match (no semantic)</h4><div class="body" id="b1">—</div></div>
+      <div class="step" id="s2"><h4>2 · Diagnosis</h4><div class="body" id="b2">—</div></div>
+      <div class="step" id="s3"><h4>3 · Retrieval (BM25 keyword only)</h4><div class="body" id="b3">—</div></div>
+      <div class="step" id="s4"><h4>4 · Answer · <span id="chLabel">Case</span></h4>
+        <div class="body"><div class="ans" id="ans">—</div><div class="cite" id="cite"></div></div>
+      </div>
+      <div class="warnbox" id="warn" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="card">
+    <h2>Why the graph is thin without the fleet</h2>
+    <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">Every capability of the future-vision graph traces back to an agent that continuously feeds it. Remove the fleet and each capability degrades to its manual, static baseline.</p>
+    <table class="cmp">
+      <tr><th>Capability</th><th>With Multi-Agent Fleet (future vision)</th><th>Without the Fleet (today's baseline)</th></tr>
+      <tr><td><b>Nodes</b></td><td class="fut">Symptoms, causes, diagnostics, fixes, evidence, releases, community intents — auto-extracted &amp; entity-resolved.</td><td class="now">Only what a human hand-authored: a product page and a few KB articles. Causes/fixes never captured as nodes.</td></tr>
+      <tr><td><b>Edges / relationships</b></td><td class="fut">Typed, multi-hop: Symptom→Cause→Diagnostic→Fix→Article, with EVIDENCED_BY links.</td><td class="now">Weak keyword co-occurrence only. No causal reasoning path — the graph is really a flat document list.</td></tr>
+      <tr><td><b>Confidence</b></td><td class="fut">Every cause ranked (e.g. Clock skew 94%), updated as telemetry/cases accrue.</td><td class="now">None. No signal to rank causes, so diagnosis can't be prioritized.</td></tr>
+      <tr><td><b>Freshness</b></td><td class="fut">Articles regenerate when code ships or a gap is detected (KB1001 → v2 automatically).</td><td class="now">Frozen at last human edit (v1, 15 months old). Goes stale silently.</td></tr>
+      <tr><td><b>Gap visibility</b></td><td class="fut">312 recurring queries surface the missing step; content is drafted proactively.</td><td class="now">Invisible. Gaps are discovered only when customers re-contact — after the fact.</td></tr>
+      <tr><td><b>Retrieval</b></td><td class="fut">Hybrid: vector (semantic) ⊕ graph subgraph ⊕ keyword, reranked (RRF).</td><td class="now">Keyword/BM25 only. Misses paraphrases; returns a whole page, not a diagnosis.</td></tr>
+      <tr><td><b>Answer</b></td><td class="fut">Grounded, cited, channel-shaped, self-verified.</td><td class="now">The static article text, identical on every channel, often missing the remediation step → re-contact.</td></tr>
+      <tr><td><b>Uncovered query</b></td><td class="fut">Auto-drafts a new asset from community + case signal within the loop.</td><td class="now">&ldquo;No article found&rdquo; → escalate to a human; content gap persists for weeks.</td></tr>
+    </table>
+    <div class="note" style="border-left-color:var(--red)">Net effect for this use case: the graph holds a product node and a single stale KB1001 (v1). The <b>Clock skew (94%)</b> cause, the <code>w32tm /resync</code> fix, the case evidence, the telemetry link, and the 312-customer demand signal — all shown ghosted above — simply don't exist, because there is no agent to discover, extract, and promote them.</div>
+  </div>
+</div>
+
+<div class="foot">Concept prototype — illustrative baseline (the &ldquo;before&rdquo; state). Same SSO scenario as the future-vision prototype, with the Multi-Agent Ingestion Fleet removed to show how the knowledge graph, retrieval, and answers degrade. Generic, no internal system names.</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("graph");
+let showGhost=false;
+
+// Present today (hand-authored, keyword-linked) vs ghost (only exists WITH the fleet)
+let nodes=[
+  {id:"prod",label:"Identity Connector",x:330,y:70,type:"prod"},
+  {id:"sym",label:"SSO redirect loop",x:150,y:120,type:"sym"},
+  {id:"art",label:"KB1001 (v1, stale)",x:150,y:320,type:"art"},
+  {id:"art2",label:"SAML setup guide",x:360,y:320,type:"art"},
+  // ---- ghost (missing without the fleet) ----
+  {id:"comm",label:"312 asking",x:70,y:60,type:"intent",ghost:true},
+  {id:"c1",label:"Clock skew? 94%",x:120,y:215,type:"cause",ghost:true},
+  {id:"c2",label:"RelayState?",x:300,y:210,type:"cause",ghost:true},
+  {id:"c3",label:"Cookie?",x:470,y:210,type:"cause",ghost:true},
+  {id:"d1",label:"Check NTP",x:110,y:415,type:"diag",ghost:true},
+  {id:"f1",label:"Resync time",x:260,y:440,type:"fix",ghost:true},
+  {id:"ev1",label:"Case evidence",x:470,y:330,type:"ev",ghost:true},
+  {id:"tel",label:"Telemetry",x:510,y:110,type:"ev",ghost:true},
+];
+// present edges: weak keyword links only
+let edges=[
+  {a:"prod",b:"sym",kind:"key"},
+  {a:"sym",b:"art",kind:"key"},
+  {a:"sym",b:"art2",kind:"key"},
+  // ghost edges (typed causal graph the fleet would build)
+  {a:"comm",b:"sym",ghost:true},
+  {a:"sym",b:"c1",ghost:true},{a:"sym",b:"c2",ghost:true},{a:"sym",b:"c3",ghost:true},
+  {a:"c1",b:"d1",ghost:true},{a:"d1",b:"f1",ghost:true},{a:"f1",b:"art",ghost:true},
+  {a:"ev1",b:"c1",ghost:true},{a:"tel",b:"c1",ghost:true},{a:"c3",b:"ev1",ghost:true},
+];
+const fill={prod:"#efe7db",sym:"#efe7db",art:"#e9d6b6",cause:"#efe1c6",diag:"#cfe9df",fix:"#cfe9df",ev:"#f2d8cc",intent:"#bcd8ef"};
+
+function draw(){
+  svg.innerHTML="";
+  edges.forEach(e=>{
+    if(e.ghost && !showGhost) return;
+    const na=nodes.find(n=>n.id===e.a),nb=nodes.find(n=>n.id===e.b);
+    if(!na||!nb)return;
+    const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",na.x);l.setAttribute("y1",na.y);l.setAttribute("x2",nb.x);l.setAttribute("y2",nb.y);
+    l.setAttribute("class","edge"+(e.ghost?" ghost":(e.kind==="key"?" key":"")));
+    l.dataset.a=e.a;l.dataset.b=e.b;svg.appendChild(l);
+  });
+  nodes.forEach(n=>{
+    if(n.ghost && !showGhost) return;
+    const g=document.createElementNS(NS,"g");g.setAttribute("class","node"+(n.ghost?" ghost":""));
+    const rr=n.type==="cause"?30:26;
+    const cir=document.createElementNS(NS,"circle");
+    cir.setAttribute("cx",n.x);cir.setAttribute("cy",n.y);cir.setAttribute("r",rr);
+    cir.setAttribute("fill",n.ghost?"transparent":(fill[n.type]||"#fff"));
+    cir.setAttribute("stroke",n.ghost?"#8a7f6d":"#5c4a1c");
+    cir.setAttribute("stroke-width","1.5");
+    if(n.ghost)cir.setAttribute("stroke-dasharray","4 4");
+    g.appendChild(cir);
+    const words=n.label.split(" ");
+    words.forEach((w,i)=>{
+      const t=document.createElementNS(NS,"text");
+      t.setAttribute("x",n.x);t.setAttribute("y",n.y+(i-(words.length-1)/2)*11+3);
+      t.setAttribute("text-anchor","middle");t.textContent=w;g.appendChild(t);
+    });
+    svg.appendChild(g);
+  });
+}
+function toggleGhost(){
+  showGhost=document.getElementById("ghostChk").checked;draw();
+  log(showGhost?"Overlay ON — dashed nodes/edges show what the fleet would discover & promote (absent today)":"Overlay OFF — showing only what exists without the fleet", showGhost?"a":"t");
+}
+draw();
+
+const logEl=document.getElementById("log");
+function log(msg,cls="t"){const d=new Date().toLocaleTimeString();logEl.innerHTML+=`<div><span class="t">${d}</span> <span class="${cls}">${msg}</span></div>`;logEl.scrollTop=logEl.scrollHeight;}
+
+let channel="case";
+document.getElementById("channels").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  [...b.parentNode.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+  channel=b.dataset.ch;document.getElementById("chLabel").textContent=b.textContent.trim();
+  if(document.getElementById("ans").textContent!=="—" && lastCovered)renderAnswer();
+});
+function setQ(el){document.getElementById("q").value=el.textContent;}
+
+function step(id,txt,delay){return new Promise(r=>setTimeout(()=>{const s=document.getElementById(id);s.classList.add("on");if(txt!=null)s.querySelector(".body").innerHTML=txt;r();},delay));}
+
+// Same static v1 text on EVERY channel — no channel shaping, no remediation step
+const staticAnswer="SSO redirect loop after login?\nEnsure the device's time is synchronized with Active Directory and the domain controllers (within five minutes of each other).\nSee KB1001.";
+let lastCovered=true;
+
+function covered(q){
+  q=q.toLowerCase();
+  return q.includes("sso")||q.includes("redirect")||q.includes("mfa")||q.includes("saml")||q.includes("sign");
+}
+
+async function resolve(){
+  document.querySelectorAll(".step").forEach(s=>s.classList.remove("on"));
+  document.getElementById("warn").style.display="none";
+  document.getElementById("ans").className="ans";document.getElementById("ans").textContent="—";document.getElementById("cite").textContent="";
+  const q=document.getElementById("q").value;
+  const isCov=covered(q);lastCovered=isCov;
+  log('Keyword search on "'+q+'" ('+channel+" channel)","a");
+
+  await step("s1","Tokenized to keywords {"+q.toLowerCase().split(/\s+/).slice(0,4).join(", ")+"…}. <span class='miss'>No embedding / semantic match — paraphrases can miss.</span>",300);
+  await step("s2","<span class='miss'>No diagnosis available.</span> The graph has no ranked causes, no confidence, no Symptom→Cause→Fix path — nothing was mined from cases or telemetry to build one.",500);
+
+  if(isCov){
+    await step("s3","BM25 keyword hit → <b>KB1001 (v1)</b>, last updated 2025-04-09. <span class='miss'>No vector lane, no graph subgraph.</span> Returns the whole page as-is.",600);
+    await step("s4","",500);
+    renderAnswer();
+    document.getElementById("warn").style.display="block";
+    document.getElementById("warn").innerHTML="⚠ Answer is the static article and is missing a <b>remediation</b> step (how to actually resync time). Historically ~27% of these customers re-contact. Article can't self-correct — no agent to regenerate it to v2.";
+    log("Returned static KB1001 v1 · no remediation step · re-contact risk high","r");
+  }else{
+    await step("s3","BM25 keyword search → <span class='miss'>no article matched.</span> The topic was never authored, and there is no agent to draft it from community/case signal.",600);
+    await step("s4","",500);
+    const a=document.getElementById("ans");a.className="ans esc";
+    a.textContent="No knowledge-base article matched this query.\nRouting to a human agent / creating a ticket.\nA content gap will remain until an author writes the article (typical lead time: 6–8 weeks).";
+    document.getElementById("cite").textContent="";
+    document.getElementById("warn").style.display="block";
+    document.getElementById("warn").innerHTML="⚠ Content gap. Without the ingestion fleet nothing detects the 312 customers asking this, and nothing auto-drafts the missing asset — the gap is invisible until it shows up as re-contacts.";
+    log("No article found → escalate to human · content gap persists","r");
+  }
+}
+function renderAnswer(){
+  const a=document.getElementById("ans");a.className="ans";
+  a.textContent=staticAnswer;                    // identical regardless of channel
+  document.getElementById("cite").innerHTML="Source: <b>KB1001 v1</b> (2025-04-09) — same text on every channel; no per-channel shaping, no live grounding.";
+}
+
+log("Baseline loaded · graph = 1 product + 2 static articles · fleet absent","a");
+log("Tip: tick the ghost overlay to see the graph the fleet would build","t");
+</script>
+</body>
+</html>
