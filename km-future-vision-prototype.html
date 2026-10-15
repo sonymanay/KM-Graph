@@ -3,283 +3,383 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Future Vision — Self-Evolving Knowledge System (Concept Prototype)</title>
+<title>Knowledge That Learns — The Intelligence Layer for Support (Concept Prototype)</title>
 <style>
-  :root{
-    --bg:#0f1b2b; --panel:#15263a; --panel2:#1b3149; --ink:#e8f0f8; --muted:#9fb3c8;
-    --line:#274963; --blue:#2b8fe0; --teal:#17b39a; --amber:#e6a54b; --red:#e0685f;
-    --green:#25b06a; --chip:#20374f;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#0c1622,#0f1b2b);color:var(--ink);}
-  header{padding:18px 24px;border-bottom:1px solid var(--line);background:#0c1826;position:sticky;top:0;z-index:5}
-  header h1{margin:0;font-size:20px}
-  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
-  .badge{display:inline-block;font-size:11px;color:#0c1622;background:var(--amber);border-radius:10px;padding:2px 8px;margin-left:8px;vertical-align:middle}
-  .wrap{display:grid;grid-template-columns:300px 1fr 380px;gap:14px;padding:14px;max-width:1600px;margin:0 auto}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-  .card h2{margin:0 0 10px;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#bcd3e8}
-  .agent{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:8px;font-size:13px;transition:.25s}
-  .agent .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
-  .agent.active{border-color:var(--blue);box-shadow:0 0 0 2px rgba(43,143,224,.25)}
-  .agent.active .dot{background:var(--blue);box-shadow:0 0 8px var(--blue)}
-  .agent small{display:block;color:var(--muted);font-size:11px}
-  button{cursor:pointer;font-family:inherit}
-  .btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;width:100%;margin-top:6px}
-  .btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
-  .btn.teal{background:var(--teal)}
-  .btn:active{transform:translateY(1px)}
-  svg{width:100%;height:520px;display:block}
-  .node text{font-size:11px;font-weight:700;fill:#0c1622}
-  .node.new circle{animation:pop .6s ease}
-  @keyframes pop{0%{transform:scale(.1);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1)}}
-  .edge{stroke:#3d6f95;stroke-width:1.6}
-  .edge.hot{stroke:var(--teal);stroke-width:3;filter:drop-shadow(0 0 4px var(--teal))}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
-  .legend span{display:inline-flex;align-items:center;gap:5px}
-  .swatch{width:11px;height:11px;border-radius:50%;display:inline-block}
-  .log{background:#0b1420;border:1px solid var(--line);border-radius:9px;padding:10px;height:150px;overflow:auto;font-family:Consolas,monospace;font-size:12px;line-height:1.5}
-  .log .t{color:#5f7c99}
-  .log .b{color:var(--blue)} .log .g{color:var(--green)} .log .a{color:var(--amber)} .log .r{color:var(--red)}
-  input[type=text]{width:100%;background:#0b1420;border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px;font-size:13px;font-family:inherit}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-  .chip{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:5px 10px;font-size:12px;color:#cfe0f0}
-  .chip:hover{border-color:var(--blue)}
-  .step{border-left:2px solid var(--line);padding:8px 0 8px 12px;margin-left:4px;opacity:.35;transition:.35s}
-  .step.on{opacity:1;border-color:var(--teal)}
-  .step h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#bcd3e8}
-  .step .body{font-size:13px;color:var(--ink)}
-  .cause{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 9px;margin:4px 0;font-size:12px}
-  .bar{height:6px;border-radius:4px;background:var(--teal)}
-  .ans{background:#0d2a20;border:1px solid #1c5c45;border-radius:9px;padding:11px;font-size:13px;margin-top:6px}
-  .cite{font-size:11px;color:#7fd0b8;margin-top:6px}
-  .flag{background:#3a1f1c;border:1px solid #7a3a33;border-radius:8px;padding:8px;font-size:12px;color:#f0b7b0;margin-top:8px;display:none}
-  .flag.show{display:block}
-  .channels{display:flex;gap:6px;margin:8px 0}
-  .channels button{flex:1;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px;font-size:12px}
-  .channels button.on{background:var(--blue);border-color:var(--blue)}
-  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px;text-align:center}
-  .metric b{display:block;font-size:20px}
-  .metric small{color:var(--muted);font-size:11px}
-  .gap b{color:var(--amber)} .cov b{color:var(--teal)} .res b{color:var(--green)}
-  .foot{max-width:1600px;margin:0 auto;padding:6px 18px 26px;color:#6f8298;font-size:12px}
-  /* --- concept explainer + self-evolving article --- */
-  .section{max-width:1600px;margin:0 auto;padding:0 14px 14px}
-  .section > .card{margin-bottom:14px}
-  .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:1100px){.concept-grid{grid-template-columns:1fr}}
-  .cstep{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;transition:.3s}
-  .cstep h3{margin:0 0 6px;font-size:13px;color:#bcd3e8}
-  .cstep p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.55}
-  .vec{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}
-  .vec span{background:#0b1420;border:1px solid var(--line);border-radius:5px;padding:3px 6px;font-family:Consolas,monospace;font-size:11px;color:#8fd0ff}
-  .simrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin:4px 0}
-  .simrow .name{color:var(--ink)}
-  .simbar{height:7px;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue))}
-  .rel{display:inline-block;font-family:Consolas,monospace;font-size:11px;color:#bfe9df;background:#0d2a20;border:1px solid #1c5c45;border-radius:5px;padding:2px 6px;margin:2px 3px 2px 0}
-  .lane{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:12px;color:var(--muted)}
-  .lane b{font-size:11px;text-transform:uppercase;color:#9fb3c8}
-  .pathline{font-family:Consolas,monospace;font-size:11.5px;color:#e8f0f8;background:#0b1420;border:1px solid var(--line);border-radius:7px;padding:8px;line-height:1.6;word-break:break-word}
-  .doc{background:#ffffff;color:#171717;border-radius:10px;overflow:hidden;border:1px solid #d0d7de}
-  .doc .bar{background:#f3f2f1;border-bottom:1px solid #e1dfdd;padding:8px 14px;font-size:12px;color:#605e5c}
-  .doc .body{padding:14px 18px}
-  .doc .crumb{font-size:11px;color:#0067b8;margin:0 0 6px}
-  .doc h3{margin:0 0 4px;font-size:18px;color:#171717}
-  .doc .meta{font-size:11px;color:#605e5c;margin:0 0 10px}
-  .doc h4{font-size:14px;margin:12px 0 6px;color:#171717}
-  .doc ul{margin:0;padding-left:18px}
-  .doc li{font-size:12.5px;line-height:1.55;margin:4px 0;color:#242424}
-  .doc .ins{background:#d6f5df;border-left:3px solid #1a7f37;padding:6px 8px;border-radius:4px;display:block;margin:5px 0;color:#0f3d1c;animation:pop .5s ease}
-  .doc code{background:#f0f0f0;border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:12px;color:#0a3069}
-  .vtabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
-  .vtabs button{background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 12px;font-size:12px}
-  .vtabs button.on{background:var(--blue);border-color:var(--blue)}
-  .changelog{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;font-size:12px;line-height:1.5}
-  .changelog .k{color:var(--amber);font-weight:600}
+:root{ --bg:#0f1b2b; --panel:#15263a; --panel2:#1b3149; --ink:#e8f0f8; --muted:#9fb3c8; --line:#274963; --blue:#2b8fe0; --teal:#17b39a; --amber:#e6a54b; --red:#e0685f; --green:#25b06a; --chip:#20374f; --violet:#a690f0; }
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#0c1622,#0f1b2b);color:var(--ink);}
+header{padding:18px 24px;border-bottom:1px solid var(--line);background:#0c1826;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:20px}
+header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.badge{display:inline-block;font-size:11px;color:#0c1622;background:var(--amber);border-radius:10px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.wrap{display:grid;grid-template-columns:300px 1fr 380px;gap:14px;padding:14px;max-width:1600px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{margin:0 0 10px;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#bcd3e8}
+.agent{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:8px;font-size:13px;transition:.25s}
+.agent .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.agent.active{border-color:var(--blue);box-shadow:0 0 0 2px rgba(43,143,224,.25)}
+.agent.active .dot{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+.agent small{display:block;color:var(--muted);font-size:11px}
+button{cursor:pointer;font-family:inherit}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;width:100%;margin-top:6px}
+.btn.sec{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.btn.teal{background:var(--teal)}
+.btn:active{transform:translateY(1px)}
+svg{width:100%;height:520px;display:block}
+.node text{font-size:11px;font-weight:700;fill:#0c1622}
+.node.new circle{animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(.1);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.edge{stroke:#3d6f95;stroke-width:1.6}
+.edge.hot{stroke:var(--teal);stroke-width:3;filter:drop-shadow(0 0 4px var(--teal))}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.swatch{width:11px;height:11px;border-radius:50%;display:inline-block}
+.log{background:#0b1420;border:1px solid var(--line);border-radius:9px;padding:10px;height:150px;overflow:auto;font-family:Consolas,monospace;font-size:12px;line-height:1.5}
+.log .t{color:#5f7c99} .log .b{color:var(--blue)} .log .g{color:var(--green)} .log .a{color:var(--amber)} .log .r{color:var(--red)}
+input[type=text]{width:100%;background:#0b1420;border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px;font-size:13px;font-family:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:5px 10px;font-size:12px;color:#cfe0f0}
+.chip:hover{border-color:var(--blue)}
+.step{border-left:2px solid var(--line);padding:8px 0 8px 12px;margin-left:4px;opacity:.35;transition:.35s}
+.step.on{opacity:1;border-color:var(--teal)}
+.step h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#bcd3e8}
+.step .body{font-size:13px;color:var(--ink)}
+.cause{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 9px;margin:4px 0;font-size:12px}
+.bar{height:6px;border-radius:4px;background:var(--teal)}
+.ans{background:#0d2a20;border:1px solid #1c5c45;border-radius:9px;padding:11px;font-size:13px;margin-top:6px}
+.cite{font-size:11px;color:#7fd0b8;margin-top:6px}
+.flag{background:#3a1f1c;border:1px solid #7a3a33;border-radius:8px;padding:8px;font-size:12px;color:#f0b7b0;margin-top:8px;display:none}
+.flag.show{display:block}
+.channels{display:flex;gap:6px;margin:8px 0}
+.channels button{flex:1;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px;font-size:12px}
+.channels button.on{background:var(--blue);border-color:var(--blue)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.metric{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px;text-align:center}
+.metric b{display:block;font-size:20px}
+.metric small{color:var(--muted);font-size:11px}
+.gap b{color:var(--amber)} .cov b{color:var(--teal)} .res b{color:var(--green)}
+.foot{max-width:1600px;margin:0 auto;padding:6px 18px 26px;color:#6f8298;font-size:12px}
+/* --- concept explainer + self-evolving article --- */
+.section{max-width:1600px;margin:0 auto;padding:0 14px 14px}
+.section > .card{margin-bottom:14px}
+.concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1100px){.concept-grid{grid-template-columns:1fr}}
+.cstep{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;transition:.3s}
+.cstep h3{margin:0 0 6px;font-size:13px;color:#bcd3e8}
+.cstep p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.55}
+.vec{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}
+.vec span{background:#0b1420;border:1px solid var(--line);border-radius:5px;padding:3px 6px;font-family:Consolas,monospace;font-size:11px;color:#8fd0ff}
+.simrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin:4px 0}
+.simrow .name{color:var(--ink)}
+.simbar{height:7px;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue))}
+.rel{display:inline-block;font-family:Consolas,monospace;font-size:11px;color:#bfe9df;background:#0d2a20;border:1px solid #1c5c45;border-radius:5px;padding:2px 6px;margin:2px 3px 2px 0}
+.lane{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:12px;color:var(--muted)}
+.lane b{font-size:11px;text-transform:uppercase;color:#9fb3c8}
+.pathline{font-family:Consolas,monospace;font-size:11.5px;color:#e8f0f8;background:#0b1420;border:1px solid var(--line);border-radius:7px;padding:8px;line-height:1.6;word-break:break-word}
+.doc{background:#ffffff;color:#171717;border-radius:10px;overflow:hidden;border:1px solid #d0d7de}
+.doc .bar{background:#f3f2f1;border-bottom:1px solid #e1dfdd;padding:8px 14px;font-size:12px;color:#605e5c}
+.doc .body{padding:14px 18px}
+.doc .crumb{font-size:11px;color:#0067b8;margin:0 0 6px}
+.doc h3{margin:0 0 4px;font-size:18px;color:#171717}
+.doc .meta{font-size:11px;color:#605e5c;margin:0 0 10px}
+.doc h4{font-size:14px;margin:12px 0 6px;color:#171717}
+.doc ul{margin:0;padding-left:18px}
+.doc li{font-size:12.5px;line-height:1.55;margin:4px 0;color:#242424}
+.doc .ins{background:#d6f5df;border-left:3px solid #1a7f37;padding:6px 8px;border-radius:4px;display:block;margin:5px 0;color:#0f3d1c;animation:pop .5s ease}
+.doc code{background:#f0f0f0;border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:12px;color:#0a3069}
+.vtabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.vtabs button{background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 12px;font-size:12px}
+.vtabs button.on{background:var(--blue);border-color:var(--blue)}
+.changelog{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;font-size:12px;line-height:1.5}
+.changelog .k{color:var(--amber);font-weight:600}
+/* --- NEW: intelligence-layer additions (same visual language) --- */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.phase{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:11.5px;color:var(--muted)}
+.phase b{display:block;color:var(--ink);font-size:12px}
+.phase.here{border-color:var(--teal);box-shadow:0 0 0 2px rgba(23,179,154,.25)}
+.phase.next{border-style:dashed;border-color:var(--violet)}
+.metrics.m4{grid-template-columns:repeat(4,1fr)}
+.metric .d{display:block;font-size:10.5px;margin-top:2px;color:var(--muted)}
+.metric .d.good{color:var(--green)}
+.trendgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1100px){.trendgrid{grid-template-columns:1fr}}
+.spark{background:#0b1420;border:1px solid var(--line);border-radius:9px;padding:8px}
+.spark svg{height:110px}
+.spark .cap{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:4px}
+.slider{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted);margin:4px 0 10px}
+.slider input{flex:1;accent-color:var(--teal)}
+.policy{font-size:12px;color:var(--muted);border-left:3px solid var(--violet);padding:4px 0 4px 10px;margin:0 0 10px;line-height:1.5}
+.qitem{background:var(--panel2);border:1px solid var(--violet);border-radius:10px;padding:10px;margin-bottom:8px;font-size:12.5px}
+.qmeta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.tag{display:inline-block;border-radius:10px;padding:2px 8px;font-size:11px;background:var(--chip);color:#cfe0f0;border:1px solid var(--line)}
+.tag.good{color:#7fe0a8;border-color:#1c5c45} .tag.warn{color:var(--amber);border-color:#6b4a1f} .tag.bad{color:#f0b7b0;border-color:#7a3a33} .tag.vio{color:var(--violet);border-color:#4b3f80}
+.diff{background:#0b1420;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12px;line-height:1.5}
+.diff .del{color:#f0b7b0;text-decoration:line-through;display:block}
+.diff .add{color:#7fe0a8;display:block}
+.qbtns{display:flex;gap:6px;margin-top:8px}
+.qbtns .btn{width:auto;margin-top:0;padding:6px 10px;font-size:12px}
+.btn.bad{background:transparent;border:1px solid var(--red);color:#f0b7b0}
+.empty{font-size:12px;color:var(--muted);font-style:italic}
+.audit{background:#0b1420;border:1px solid var(--line);border-radius:9px;padding:8px 10px;height:140px;overflow:auto;font-size:11.5px;line-height:1.55;font-family:Consolas,monospace;margin-top:10px}
+.audit b{color:var(--ink)} .audit div{color:var(--muted)}
+.vin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.vin label{font-size:11.5px;color:var(--muted);display:grid;gap:4px}
+.vin input{background:#0b1420;border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:8px;font-size:13px;font-family:inherit}
+.dom3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:1100px){.dom3,.vin{grid-template-columns:1fr}}
+.dom{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px;transition:.3s}
+.dom h3{margin:0 0 4px;font-size:13px;color:#bcd3e8}
+.dom small{color:var(--muted);font-size:11.5px}
+.dom ul{margin:6px 0 0;padding-left:18px;font-size:12px;line-height:1.5}
+.dom.lit{border-color:var(--violet);box-shadow:0 0 0 2px rgba(166,144,240,.3)}
+.event{background:#0b1420;border:1px dashed var(--violet);border-radius:9px;padding:10px;font-size:12.5px;margin-top:10px;line-height:1.5}
+.event ol{margin:6px 0 0;padding-left:20px}
+.note{font-size:11px;color:#6f8298;margin-top:8px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Future Vision — The Self-Evolving Knowledge System <span class="badge">Concept prototype</span></h1>
-  <p>Multi-agent sourcing → living knowledge graph → intent &amp; diagnosis → one accurate answer on every channel. Click through the flow below.</p>
+<h1>Knowledge That Learns: The Intelligence Layer for Support <span class="badge">Concept prototype · illustrative data</span></h1>
+<p>Multi-agent sourcing → living knowledge graph → intent &amp; diagnosis → one accurate answer on every channel → every interaction makes the next answer better, with experts approving the risky changes. Click through the flow below.</p>
+<div class="phases">
+<div class="phase"><b>Phase 1 · Connected tools</b>Sequential handoffs; knowledge trapped in each tool and team.</div>
+<div class="phase here"><b>Phase 2 · Shared knowledge layer ◀ this prototype</b>Agents read from and write to one graph; people supervise and approve risk.</div>
+<div class="phase next"><b>Phase 3 · One intelligence layer</b>The same graph serves product, customer success and content teams (see below).</div>
+</div>
 </header>
-
 <div class="wrap">
-  <!-- LEFT: agents + sources -->
-  <div class="card">
-    <h2>Multi-Agent Ingestion Fleet</h2>
-    <div class="agent" data-a="comm"><span class="dot"></span><div>Community Crawler<small>weekly forum questions</small></div></div>
-    <div class="agent" data-a="code"><span class="dot"></span><div>Code / Release Listener<small>commits → impacted content</small></div></div>
-    <div class="agent" data-a="case"><span class="dot"></span><div>Case &amp; Telemetry Miner<small>symptoms, fixes, known issues</small></div></div>
-    <div class="agent" data-a="intl"><span class="dot"></span><div>Real-Time Internal Info<small>live entitlement / config</small></div></div>
-    <div class="agent" data-a="extr"><span class="dot"></span><div>Extraction &amp; Entity-Resolution<small>nodes · dedupe · confidence</small></div></div>
-    <button class="btn" onclick="runFleet()">▶ Run the fleet (ingest signals)</button>
-    <button class="btn sec" onclick="ingestCommunity()">＋ New community question</button>
-    <button class="btn sec" onclick="ingestRelease()">＋ Product / code change (proactive)</button>
-    <button class="btn sec" onclick="ingestEvidence()">＋ New evidence (updates graph)</button>
-    <h2 style="margin-top:14px">Activity log</h2>
-    <div class="log" id="log"></div>
-  </div>
-
-  <!-- CENTER: living knowledge graph -->
-  <div class="card">
-    <h2>Living Knowledge Graph <span style="text-transform:none;color:var(--muted);font-weight:400">· GraphRAG substrate · self-evolving</span></h2>
-    <svg id="graph" viewBox="0 0 640 520" aria-label="Knowledge graph"></svg>
-    <div class="legend">
-      <span><i class="swatch" style="background:#ffffff"></i>Symptom / Product / Release</span>
-      <span><i class="swatch" style="background:#bfe9df"></i>Diagnostic / Fix</span>
-      <span><i class="swatch" style="background:#f7d8cc"></i>Evidence / Article</span>
-      <span><i class="swatch" style="background:#8fd0ff"></i>Community intent</span>
-    </div>
-    <div class="metrics">
-      <div class="metric gap"><b id="mGap">31%</b><small>Gap Rate ↓ (leading)</small></div>
-      <div class="metric cov"><b id="mCov">69%</b><small>Coverage Rate ↑</small></div>
-      <div class="metric res"><b id="mRes">—</b><small>Resolution quality</small></div>
-    </div>
-  </div>
-
-  <!-- RIGHT: understand & resolve -->
-  <div class="card">
-    <h2>Understand &amp; Resolve</h2>
-    <input id="q" type="text" placeholder="Ask in your own words…" value="Users hit an SSO redirect loop after logging in"/>
-    <div class="chips">
-      <button class="chip" onclick="setQ(this)">SSO redirect loop after login</button>
-      <button class="chip" onclick="setQ(this)">MFA prompt keeps repeating</button>
-      <button class="chip" onclick="setQ(this)">Login works on web, fails in app</button>
-    </div>
-    <div class="channels" id="channels">
-      <button data-ch="phone">📞 Phone</button>
-      <button data-ch="case" class="on">🗂 Case</button>
-      <button data-ch="self">💻 Self-serve</button>
-      <button data-ch="agent">🤖 AI agent</button>
-    </div>
-    <button class="btn teal" onclick="resolve()">Resolve query →</button>
-
-    <div id="pipe" style="margin-top:12px">
-      <div class="step" id="s1"><h4>1 · Intent detection</h4><div class="body" id="b1">—</div></div>
-      <div class="step" id="s2"><h4>2 · Diagnosis (graph reasoning)</h4><div class="body" id="b2">—</div></div>
-      <div class="step" id="s3"><h4>3 · Hybrid retrieval (vector + graph + keyword)</h4><div class="body" id="b3">—</div></div>
-      <div class="step" id="s4"><h4>4 · Grounded answer · <span id="chLabel">Case</span></h4>
-        <div class="body"><div class="ans" id="ans">—</div><div class="cite" id="cite"></div></div>
-      </div>
-      <div class="flag" id="flag">⚠ Reflection guardrail: a candidate claim is low-confidence / contradicted. Held for additional evidence and automated re-verification before it reaches the customer.</div>
-    </div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)">
-      <input type="checkbox" id="govOff"/> Simulate an unverified claim (show guardrail)
-    </label>
-  </div>
+<!-- LEFT: agents + sources -->
+<div class="card">
+<h2>Multi-Agent Ingestion Fleet</h2>
+<div class="agent" data-a="comm"><span class="dot"></span><div>Community Crawler<small>weekly forum questions</small></div></div>
+<div class="agent" data-a="code"><span class="dot"></span><div>Code / Release Listener<small>commits → impacted content</small></div></div>
+<div class="agent" data-a="case"><span class="dot"></span><div>Case &amp; Telemetry Miner<small>symptoms, fixes, known issues</small></div></div>
+<div class="agent" data-a="intl"><span class="dot"></span><div>Real-Time Internal Info<small>live entitlement / config</small></div></div>
+<div class="agent" data-a="extr"><span class="dot"></span><div>Extraction &amp; Entity-Resolution<small>nodes · dedupe · confidence</small></div></div>
+<button class="btn" data-act="runFleet">▶ Run the fleet (ingest signals)</button>
+<button class="btn sec" data-act="ingestCommunity">＋ New community question</button>
+<button class="btn sec" data-act="ingestRelease">＋ Product / code change (proactive)</button>
+<button class="btn sec" data-act="ingestEvidence">＋ New evidence (updates graph)</button>
+<h2 style="margin-top:14px">Activity log</h2>
+<div class="log" id="log"></div>
 </div>
+<!-- CENTER: living knowledge graph -->
+<div class="card">
+<h2>Living Knowledge Graph <span style="text-transform:none;color:var(--muted);font-weight:400">· GraphRAG substrate · self-evolving</span></h2>
+<svg id="graph" viewBox="0 0 640 520" aria-label="Knowledge graph"></svg>
+<div class="legend">
+<span><i class="swatch" style="background:#ffffff"></i>Symptom / Product / Release</span>
+<span><i class="swatch" style="background:#bfe9df"></i>Diagnostic / Fix</span>
+<span><i class="swatch" style="background:#f7d8cc"></i>Evidence / Article</span>
+<span><i class="swatch" style="background:#8fd0ff"></i>Community intent</span>
+</div>
+<div class="metrics">
+<div class="metric gap"><b id="mGap">31%</b><small>Gap Rate ↓ (leading)</small></div>
+<div class="metric cov"><b id="mCov">69%</b><small>Coverage Rate ↑</small></div>
+<div class="metric res"><b id="mRes">—</b><small>Resolution quality</small></div>
+</div>
+<div class="metrics">
+<div class="metric res"><b id="mFcr">62%</b><small>First-contact resolution ↑</small><span class="d" id="dFcr">baseline</span></div>
+<div class="metric gap"><b id="mRec">27%</b><small>Re-contact rate ↓</small><span class="d" id="dRec">baseline</span></div>
+<div class="metric cov"><b id="mPub">0</b><small>Improvements published</small><span class="d" id="dPub">0 auto · 0 expert-approved</span></div>
+</div>
+</div>
+<!-- RIGHT: understand & resolve -->
+<div class="card">
+<h2>Understand &amp; Resolve</h2>
+<input id="q" type="text" placeholder="Ask in your own words…" value="Users hit an SSO redirect loop after logging in"/>
+<div class="chips">
+<button class="chip" data-act="setQ">SSO redirect loop after login</button>
+<button class="chip" data-act="setQ">MFA prompt keeps repeating</button>
+<button class="chip" data-act="setQ">Login works on web, fails in app</button>
+</div>
+<div class="channels" id="channels">
+<button data-ch="phone">📞 Phone</button>
+<button data-ch="case" class="on">🗂 Case</button>
+<button data-ch="self">💻 Self-serve</button>
+<button data-ch="agent">🤖 AI agent</button>
+</div>
+<button class="btn teal" data-act="resolve">Resolve query →</button>
+<div id="pipe" style="margin-top:12px">
+<div class="step" id="s1"><h4>1 · Intent detection</h4><div class="body" id="b1">—</div></div>
+<div class="step" id="s2"><h4>2 · Diagnosis (graph reasoning)</h4><div class="body" id="b2">—</div></div>
+<div class="step" id="s3"><h4>3 · Hybrid retrieval (vector + graph + keyword)</h4><div class="body" id="b3">—</div></div>
+<div class="step" id="s4"><h4>4 · Grounded answer · <span id="chLabel">Case</span></h4>
+<div class="body"><div class="ans" id="ans">—</div><div class="cite" id="cite"></div></div>
+</div>
+<div class="flag" id="flag">⚠ Reflection guardrail: a candidate claim is low-confidence / contradicted. Held for additional evidence and automated re-verification before it reaches the customer.</div>
+</div>
+<label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)">
+<input type="checkbox" id="govOff"/> Simulate an unverified claim (show guardrail)
+</label>
+</div>
+</div>
+
 <div class="section">
-  <!-- Concept explainer -->
-  <div class="card">
-    <h2>Inside &ldquo;Understand &amp; Resolve&rdquo; — the concepts behind each step</h2>
-    <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">How a plain-language question becomes a diagnosed, grounded answer — semantic search, graph nodes and typed relationships, hybrid retrieval and grounding.
-      <button class="btn sec" style="width:auto;display:inline-block;padding:6px 12px;margin-top:0" onclick="traceConcepts()">▶ Trace the steps</button></p>
-    <div class="concept-grid">
-      <div>
-        <div class="cstep" id="cc1">
-          <h3>1 · Intent detection &amp; entity extraction</h3>
-          <p>An LLM reads the raw question and classifies the <b>intent</b>, then extracts <b>entities</b> — product, version, symptom, region. Meaning first; no keyword matching yet.</p>
-          <div class="pathline">&ldquo;Users hit an <span style="color:#e6a54b">SSO redirect loop</span> after logging in&rdquo;<br>→ intent = <b style="color:#8fd0ff">sso_redirect_loop</b> · entities = {product: Identity Connector, symptom: redirect_loop}</div>
-        </div>
-        <div class="cstep" id="cc2">
-          <h3>2 · Semantic search (embeddings + vector similarity)</h3>
-          <p>The query becomes an <b>embedding</b> — a numeric vector capturing meaning. It is compared to every node/article embedding by <b>cosine similarity</b>, so &ldquo;redirect loop&rdquo; matches &ldquo;authentication loop&rdquo; even with no shared words.</p>
-          <div class="vec" id="qvec"></div>
-          <div id="simlist"></div>
-        </div>
-        <div class="cstep" id="cc3">
-          <h3>3 · Graph reasoning (nodes &amp; typed relationships)</h3>
-          <p>Each match is a <b>node</b> in the knowledge graph. Typed <b>edges</b> let the system reason across multiple hops instead of returning one flat page:</p>
-          <div>
-            <span class="rel">Symptom —CAUSED_BY→ Cause</span>
-            <span class="rel">Cause —DIAGNOSED_BY→ Diagnostic</span>
-            <span class="rel">Diagnostic —RESOLVED_BY→ Fix</span>
-            <span class="rel">Fix —DOCUMENTED_IN→ Article</span>
-            <span class="rel">Cause —EVIDENCED_BY→ Evidence</span>
-          </div>
-          <div class="pathline" style="margin-top:8px">Multi-hop traversal: SSO redirect loop → <b>Clock skew (94%)</b> → Check NTP → Resync time → KB1001. Confidence propagates along the path; an applicability filter drops causes that don&rsquo;t match the customer&rsquo;s version/entitlement.</div>
-        </div>
-      </div>
-      <div>
-        <div class="cstep" id="cc4">
-          <h3>4 · Hybrid retrieval &amp; rerank</h3>
-          <p>Three retrievers run in parallel and are fused by a <b>reranker</b> (reciprocal-rank fusion). Each lane catches what the others miss:</p>
-          <div class="lane"><b>Vector</b><div>semantic match on meaning — embeddings + cosine similarity</div></div>
-          <div class="lane"><b>Graph</b><div>the Symptom→Cause→Fix subgraph, filtered by version &amp; entitlement</div></div>
-          <div class="lane"><b>Keyword</b><div>exact terms / error codes (BM25) — e.g. <code style="background:#0b1420;color:#8fd0ff;border-radius:4px;padding:1px 5px">81002</code></div></div>
-          <div class="pathline" style="margin-top:8px">rerank( vector ⊕ graph ⊕ keyword ) → top evidence: <b>KB1001 v2</b> · case evidence · telemetry</div>
-        </div>
-        <div class="cstep" id="cc5">
-          <h3>5 · Grounded answer + provenance</h3>
-          <p>The LLM composes the answer <b>only</b> from retrieved evidence, and every claim carries a citation. A <b>reflection</b> step verifies each claim against its source before it reaches the customer; then the answer is shaped to the channel.</p>
-          <div class="pathline">answer = compose(evidence) · cite(KB1001 v2, case-evidence) · reflect(✓) · shape(channel)</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Self-evolving Microsoft Learn article -->
-  <div class="card">
-    <h2>Self-Evolving Content — a real Microsoft Learn article updates from a customer query</h2>
-    <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">When the case miners and community crawler detect that a recurring query isn&rsquo;t fully answered by existing content, the system autonomously drafts, self-validates (reflection + provenance), and publishes the update, and the article version increments — so the next customer gets the better answer.</p>
-    <div class="concept-grid">
-      <div>
-        <div class="vtabs">
-          <button id="vt1" class="on" onclick="showVer(1)">v1 · before</button>
-          <button id="vt2" onclick="showVer(2)">v2 · after (enhanced)</button>
-          <button class="btn teal" style="width:auto;padding:6px 12px;margin:0" onclick="regen()">⟳ Regenerate from customer signal</button>
-        </div>
-        <div class="doc">
-          <div class="bar">📄 learn.microsoft.com › Entra › Identity › Hybrid › Connect</div>
-          <div class="body">
-            <div class="crumb">Microsoft Entra ID / Hybrid identity / Microsoft Entra Connect</div>
-            <h3>Troubleshoot Microsoft Entra seamless single sign-on</h3>
-            <div class="meta" id="docmeta">Last updated: 2025-04-09 · Version 1</div>
-            <h4>Troubleshooting checklist</h4>
-            <ul id="checklist"></ul>
-          </div>
-        </div>
-        <div style="font-size:11px;color:#6f8298;margin-top:6px">Source: <a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-connect-sso" style="color:#7fd0b8">learn.microsoft.com/…/tshoot-connect-sso</a> — real published article (checklist text is genuine); the v1→v2 update is an illustrative example of the self-evolving loop.</div>
-      </div>
-      <div>
-        <div class="changelog" id="changelog">…</div>
-        <div class="cstep" style="margin-top:10px">
-          <h3>Answer to the customer — before vs. after</h3>
-          <div id="ansBefore"></div>
-          <div id="ansAfter"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- Concept explainer -->
+<div class="card">
+<h2>Inside &ldquo;Understand &amp; Resolve&rdquo; — the concepts behind each step</h2>
+<p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">How a plain-language question becomes a diagnosed, grounded answer — semantic search, graph nodes and typed relationships, hybrid retrieval and grounding. <button class="btn sec" style="width:auto;display:inline-block;padding:6px 12px;margin-top:0" data-act="traceConcepts">▶ Trace the steps</button></p>
+<div class="concept-grid">
+<div>
+<div class="cstep" id="cc1">
+<h3>1 · Intent detection &amp; entity extraction</h3>
+<p>An LLM reads the raw question and classifies the <b>intent</b>, then extracts <b>entities</b> — product, version, symptom, region. Meaning first; no keyword matching yet.</p>
+<div class="pathline">&ldquo;Users hit an <span style="color:#e6a54b">SSO redirect loop</span> after logging in&rdquo;<br>→ intent = <b style="color:#8fd0ff">sso_redirect_loop</b> · entities = {product: Identity Connector, symptom: redirect_loop}</div>
+</div>
+<div class="cstep" id="cc2">
+<h3>2 · Semantic search (embeddings + vector similarity)</h3>
+<p>The query becomes an <b>embedding</b> — a numeric vector capturing meaning. It is compared to every node/article embedding by <b>cosine similarity</b>, so &ldquo;redirect loop&rdquo; matches &ldquo;authentication loop&rdquo; even with no shared words.</p>
+<div class="vec" id="qvec"></div>
+<div id="simlist"></div>
+</div>
+<div class="cstep" id="cc3">
+<h3>3 · Graph reasoning (nodes &amp; typed relationships)</h3>
+<p>Each match is a <b>node</b> in the knowledge graph. Typed <b>edges</b> let the system reason across multiple hops instead of returning one flat page:</p>
+<div>
+<span class="rel">Symptom —CAUSED_BY→ Cause</span>
+<span class="rel">Cause —DIAGNOSED_BY→ Diagnostic</span>
+<span class="rel">Diagnostic —RESOLVED_BY→ Fix</span>
+<span class="rel">Fix —DOCUMENTED_IN→ Article</span>
+<span class="rel">Cause —EVIDENCED_BY→ Evidence</span>
+</div>
+<div class="pathline" style="margin-top:8px">Multi-hop traversal: SSO redirect loop → <b>Clock skew (94%)</b> → Check NTP → Resync time → KB1001. Confidence propagates along the path; an applicability filter drops causes that don&rsquo;t match the customer&rsquo;s version/entitlement.</div>
+</div>
+</div>
+<div>
+<div class="cstep" id="cc4">
+<h3>4 · Hybrid retrieval &amp; rerank</h3>
+<p>Three retrievers run in parallel and are fused by a <b>reranker</b> (reciprocal-rank fusion). Each lane catches what the others miss:</p>
+<div class="lane"><b>Vector</b><div>semantic match on meaning — embeddings + cosine similarity</div></div>
+<div class="lane"><b>Graph</b><div>the Symptom→Cause→Fix subgraph, filtered by version &amp; entitlement</div></div>
+<div class="lane"><b>Keyword</b><div>exact terms / error codes (BM25) — e.g. <code style="background:#0b1420;color:#8fd0ff;border-radius:4px;padding:1px 5px">81002</code></div></div>
+<div class="pathline" style="margin-top:8px">rerank( vector ⊕ graph ⊕ keyword ) → top evidence: <b>KB1001 v2</b> · case evidence · telemetry</div>
+</div>
+<div class="cstep" id="cc5">
+<h3>5 · Grounded answer + provenance</h3>
+<p>The LLM composes the answer <b>only</b> from retrieved evidence, and every claim carries a citation. A <b>reflection</b> step verifies each claim against its source before it reaches the customer; then the answer is shaped to the channel.</p>
+<div class="pathline">answer = compose(evidence) · cite(KB1001 v2, case-evidence) · reflect(✓) · shape(channel)</div>
+</div>
+</div>
+</div>
 </div>
 
-<div class="foot">Concept prototype — illustrative only, not a production implementation. Generic, no internal system names. Built to demonstrate the future-vision concept: agents source content, the knowledge graph self-evolves, and each query is understood, diagnosed and answered on the customer’s channel.</div>
+<!-- Self-evolving article -->
+<div class="card">
+<h2>Self-Evolving Content — an illustrative update to a Microsoft Learn article, driven by customer queries</h2>
+<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">When the case miners and community crawler detect that a recurring query isn&rsquo;t fully answered by existing content, the system drafts the update and self-validates it (reflection + provenance). Routing policy then decides: low-risk, high-confidence updates publish automatically; anything that touches security, entitlements or legal wording goes to an expert first. The article version increments — so the next customer gets the better answer.</p>
+<div class="concept-grid">
+<div>
+<div class="vtabs">
+<button id="vt1" class="on" data-act="showVer" data-v="1">v1 · before</button>
+<button id="vt2" data-act="showVer" data-v="2">v2 · after (enhanced)</button>
+<button class="btn teal" style="width:auto;padding:6px 12px;margin:0" data-act="regen">⟳ Regenerate from customer signal</button>
+</div>
+<div class="doc">
+<div class="bar">📄 learn.microsoft.com › Entra › Identity › Hybrid › Connect</div>
+<div class="body">
+<div class="crumb">Microsoft Entra ID / Hybrid identity / Microsoft Entra Connect</div>
+<h3>Troubleshoot Microsoft Entra seamless single sign-on</h3>
+<div class="meta" id="docmeta">Last updated: 2025-04-09 · Version 1</div>
+<h4>Troubleshooting checklist</h4>
+<ul id="checklist"></ul>
+</div>
+</div>
+<div style="font-size:11px;color:#6f8298;margin-top:6px">Source: learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-connect-sso — real published article (checklist text is genuine); the v1→v2 update is an illustrative example of the self-evolving loop, not a live production change.</div>
+</div>
+<div>
+<div class="changelog" id="changelog">…</div>
+<div class="cstep" style="margin-top:10px">
+<h3>Answer to the customer — before vs. after</h3>
+<div id="ansBefore"></div>
+<div id="ansAfter"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- NEW: Human-in-the-loop governance -->
+<div class="card">
+<h2>Human-in-the-loop governance — routing, expert review &amp; audit</h2>
+<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">Agents keep improving the content; people stay accountable for the decisions that carry risk. Every action is logged and can be rolled back.</p>
+<div class="concept-grid">
+<div>
+<div class="slider"><span>Auto-publish confidence threshold</span><input type="range" id="thr" min="70" max="99" value="90" aria-label="Auto-publish threshold"/><b id="thrv">90%</b></div>
+<div class="policy"><b style="color:var(--ink)">Routing policy.</b> A draft auto-publishes only if confidence ≥ threshold <i>and</i> risk is low. Drafts touching security policy, entitlements, licensing or legal wording <b style="color:var(--ink)">always</b> go to a subject-matter expert, whatever their confidence.</div>
+<button class="btn" data-act="detectGap" id="detectBtn">🔍 Detect next gap from customer signals</button>
+<div class="note" id="gapsLeft"></div>
+<div class="audit" id="audit"><div class="empty">Audit trail: no actions yet.</div></div>
+</div>
+<div>
+<h2 style="margin-bottom:8px">Expert review queue <span class="tag vio" id="qcount" style="text-transform:none;letter-spacing:0">0 pending</span></h2>
+<div id="queue"><div class="empty">Nothing waiting. Drafts that need an expert appear here.</div></div>
+</div>
+</div>
+</div>
 
+<!-- NEW: Knowledge health over time -->
+<div class="card">
+<h2>Knowledge health over time</h2>
+<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">Each agent run and each published improvement adds a data point, so you can see the system getting better week over week, not just at a single moment.</p>
+<div class="trendgrid">
+<div class="spark"><div class="cap"><span>Gap rate, weekly (lower is better)</span><span id="tGapL"></span></div><svg id="tGap" viewBox="0 0 400 110" preserveAspectRatio="none" aria-label="Gap rate trend"></svg></div>
+<div class="spark"><div class="cap"><span>First-contact resolution, weekly (higher is better)</span><span id="tFcrL"></span></div><svg id="tFcr" viewBox="0 0 400 110" preserveAspectRatio="none" aria-label="First-contact resolution trend"></svg></div>
+</div>
+</div>
+
+<!-- NEW: Business value -->
+<div class="card">
+<h2>Business value — time recaptured &amp; cost to serve</h2>
+<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">Turns the drop in re-contacts into hours and cost. Change the assumptions to match your environment.</p>
+<div class="vin">
+<label>Monthly contacts on covered topics<input type="number" id="vc" value="12000" min="0" step="500"/></label>
+<label>Cost per assisted contact ($)<input type="number" id="vcost" value="22" min="0" step="1"/></label>
+<label>Average handle time (minutes)<input type="number" id="vaht" value="20" min="0" step="1"/></label>
+</div>
+<div class="metrics m4">
+<div class="metric cov"><b id="vo1">0</b><small>Re-contacts avoided / month</small></div>
+<div class="metric res"><b id="vo2">0</b><small>Hours recaptured / month</small></div>
+<div class="metric gap"><b id="vo3">$0</b><small>Cost to serve avoided / month</small></div>
+<div class="metric res"><b id="vo4">$0</b><small>Annualized value</small></div>
+</div>
+<div class="note" id="vnote"></div>
+</div>
+
+<!-- NEW: Path to Phase 3 -->
+<div class="card">
+<h2>Path to Phase 3 — the same graph, serving every team</h2>
+<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">Knowledge built by support becomes intelligence for product, customer success and content teams. Nothing is rebuilt; each team reads from the same graph.</p>
+<div class="dom3">
+<div class="dom" id="dProd"><h3>🛠 Product engineering</h3><small>Top unresolved symptoms, ranked by customer impact</small><ul id="dProdL"></ul></div>
+<div class="dom" id="dCs"><h3>🤝 Customer success</h3><small>Accounts exposed to known issues, before they call</small><ul id="dCsL"></ul></div>
+<div class="dom" id="dCnt"><h3>📚 Content &amp; localization</h3><small>Article changes that need follow-on work</small><ul id="dCntL"></ul></div>
+</div>
+<button class="btn" style="width:auto;margin-top:10px" data-act="connectedEvent">⚡ Simulate one connected event</button>
+<span style="font-size:12px;color:var(--muted);margin-left:8px">A release change, a policy change and a spike in community questions, handled as one event instead of three escalations.</span>
+<div id="event"></div>
+</div>
+</div>
+<div class="foot">Concept prototype — illustrative only, not a production implementation. Generic, no internal system names; all metrics and dollar values are simulated. Built to demonstrate the future-vision concept: agents source content, the knowledge graph self-evolves, each query is understood, diagnosed and answered on the customer&rsquo;s channel, and people approve the changes that carry risk.</div>
 <script>
-// ---------- Graph model ----------
+/* ---------- Graph model ---------- */
 const NS="http://www.w3.org/2000/svg";
 const svg=document.getElementById("graph");
 let nodes=[
-  {id:"sym",label:"SSO redirect loop",x:150,y:90,type:"sym"},
-  {id:"prod",label:"Identity Connector",x:320,y:60,type:"sym"},
-  {id:"c1",label:"Clock skew",x:120,y:210,type:"cause",conf:.55},
-  {id:"c2",label:"Missing RelayState",x:300,y:200,type:"cause",conf:.4},
-  {id:"c3",label:"Expired cookie",x:470,y:200,type:"cause",conf:.3},
-  {id:"d1",label:"Check NTP",x:120,y:330,type:"diag"},
-  {id:"f1",label:"Resync time",x:120,y:430,type:"fix"},
-  {id:"art",label:"KB1001",x:320,y:400,type:"art"},
-  {id:"ev1",label:"Case evidence",x:470,y:330,type:"ev"},
+ {id:"sym",label:"SSO redirect loop",x:150,y:90,type:"sym"},
+ {id:"prod",label:"Identity Connector",x:320,y:60,type:"sym"},
+ {id:"c1",label:"Clock skew",x:120,y:210,type:"cause",conf:.55},
+ {id:"c2",label:"Missing RelayState",x:300,y:200,type:"cause",conf:.4},
+ {id:"c3",label:"Expired cookie",x:470,y:200,type:"cause",conf:.3},
+ {id:"d1",label:"Check NTP",x:120,y:330,type:"diag"},
+ {id:"f1",label:"Resync time",x:120,y:430,type:"fix"},
+ {id:"art",label:"KB1001",x:320,y:400,type:"art"},
+ {id:"ev1",label:"Case evidence",x:470,y:330,type:"ev"},
 ];
 let edges=[["sym","c1"],["sym","c2"],["sym","c3"],["prod","sym"],["c1","d1"],["d1","f1"],["f1","art"],["c1","art"],["c3","ev1"]];
 const fill={sym:"#ffffff",cause:"#ffe9c9",diag:"#bfe9df",fix:"#bfe9df",art:"#f7d8cc",ev:"#f7d8cc",intent:"#8fd0ff"};
-
 function draw(){
   svg.innerHTML="";
   edges.forEach(([a,b])=>{
-    const na=nodes.find(n=>n.id===a),nb=nodes.find(n=>n.id===b);
-    if(!na||!nb)return;
+    const na=nodes.find(n=>n.id===a),nb=nodes.find(n=>n.id===b); if(!na||!nb)return;
     const l=document.createElementNS(NS,"line");
     l.setAttribute("x1",na.x);l.setAttribute("y1",na.y);l.setAttribute("x2",nb.x);l.setAttribute("y2",nb.y);
     l.setAttribute("class","edge");l.dataset.a=a;l.dataset.b=b;svg.appendChild(l);
@@ -307,11 +407,11 @@ function draw(){
 }
 draw();
 
-// ---------- Log ----------
+/* ---------- Log ---------- */
 const logEl=document.getElementById("log");
 function log(msg,cls="t"){const d=new Date().toLocaleTimeString();logEl.innerHTML+=`<div><span class="t">${d}</span> <span class="${cls}">${msg}</span></div>`;logEl.scrollTop=logEl.scrollHeight;}
 
-// ---------- Agents ----------
+/* ---------- Agents ---------- */
 function flash(a){const el=document.querySelector(`.agent[data-a="${a}"]`);if(el){el.classList.add("active");setTimeout(()=>el.classList.remove("active"),900);}}
 function runFleet(){
   const seq=["comm","code","case","intl","extr"];
@@ -319,26 +419,26 @@ function runFleet(){
   setTimeout(()=>log("Extraction resolved 3 entities · attached confidence · promoted to graph","g"),seq.length*450+200);
   setTimeout(bumpCoverage,seq.length*450+400);
 }
-function addNode(n,connectTo){
-  n._new=true;nodes.push(n);if(connectTo)edges.push([connectTo,n.id]);draw();
-}
+function addNode(n,connectTo){ n._new=true;nodes.push(n);if(connectTo)edges.push([connectTo,n.id]);draw(); }
 let commCount=0;
 function ingestCommunity(){
   flash("comm");commCount++;
   const id="int"+commCount;
   addNode({id,label:"Trending Q",x:60+Math.random()*40,y:60+Math.random()*30,type:"intent"},"sym");
   log("Community Crawler: new trending question detected → scanning corpus…","b");
-  setTimeout(()=>{log("No adequate content found → auto-drafting & publishing new asset","a");bumpCoverage();},700);
+  setTimeout(()=>{log("No adequate content found → drafting new asset → routed by policy (see governance)","a");bumpCoverage();},700);
 }
-let ver=1;
+let ver=1, relCount=0;
 function ingestRelease(){
   flash("code");
   log("Code/Release Listener: production-bound commit detected","b");
   setTimeout(()=>{
+    relCount++;
     addNode({id:"rel"+Date.now(),label:"Release 5.4",x:430,y:70,type:"sym"},"prod");
-    log("Mapped change to impacted assets · auto-drafted & auto-published content update","g");
+    log("Mapped change to impacted assets · drafted content update (low risk → auto-published, logged)","g");
     log("PROACTIVE: content prepared before any customer asks (pre-release notes)","g");
-    bumpCoverage();
+    audit("Code/Release Listener","Pre-release note for Release 5.4 auto-published (low risk, confidence 91%)");
+    bumpCoverage(); renderPhase3();
   },700);
 }
 function ingestEvidence(){
@@ -350,15 +450,45 @@ function ingestEvidence(){
     if(!edges.find(e=>e[0]==="ev1"&&e[1]==="c1"))edges.push(["ev1","c1"]);
     draw();
     log("Confidence for 'Clock skew' ↑ → article regenerated to v"+ver+" (never stale)","g");
-    bumpCoverage();
+    bumpCoverage(); renderPhase3();
   },700);
 }
 
-// ---------- Metrics ----------
+/* ---------- Metrics (original + new derived outcome metrics) ---------- */
 let gap=31,cov=69;
-function bumpCoverage(){gap=Math.max(6,gap-2+Math.round(Math.random()));cov=100-gap;document.getElementById("mGap").textContent=gap+"%";document.getElementById("mCov").textContent=cov+"%";}
+const BASE={gap:31,fcr:62,rec:27};
+let boostF=0,boostR=0,pubAuto=0,pubHum=0;
+const gapHist=[44,42,40,38,36,35,33,31], fcrHist=[49,51,53,55,57,58,60,62];
+function fcrNow(){return Math.min(90,BASE.fcr+Math.round((BASE.gap-gap)*1.0)+boostF);}
+function recNow(){return Math.max(8,BASE.rec-Math.round((BASE.gap-gap)*0.5)-boostR);}
+function bumpCoverage(){
+  gap=Math.max(6,gap-2+Math.round(Math.random()));cov=100-gap;
+  document.getElementById("mGap").textContent=gap+"%";document.getElementById("mCov").textContent=cov+"%";
+  gapHist.push(gap); fcrHist.push(fcrNow()); if(gapHist.length>14){gapHist.shift();fcrHist.shift();}
+  renderOutcomes();
+}
+function renderOutcomes(){
+  const f=fcrNow(), r=recNow();
+  document.getElementById("mFcr").textContent=f+"%";
+  document.getElementById("mRec").textContent=r+"%";
+  const df=document.getElementById("dFcr"), dr=document.getElementById("dRec");
+  df.textContent=f===BASE.fcr?"baseline":"▲ "+(f-BASE.fcr)+" pts vs. baseline"; df.className="d"+(f>BASE.fcr?" good":"");
+  dr.textContent=r===BASE.rec?"baseline":"▼ "+(BASE.rec-r)+" pts vs. baseline"; dr.className="d"+(r<BASE.rec?" good":"");
+  document.getElementById("mPub").textContent=pubAuto+pubHum;
+  document.getElementById("dPub").textContent=pubAuto+" auto · "+pubHum+" expert-approved";
+  spark("tGap",gapHist,0,50,"#e6a54b"); spark("tFcr",fcrHist,40,100,"#25b06a");
+  document.getElementById("tGapL").textContent=gapHist[0]+"% → "+gapHist[gapHist.length-1]+"%";
+  document.getElementById("tFcrL").textContent=fcrHist[0]+"% → "+fcrHist[fcrHist.length-1]+"%";
+  renderValue();
+}
+function spark(id,arr,lo,hi,color){
+  const w=400,h=110,p=10,n=arr.length;
+  const xs=i=>p+(w-2*p)*i/(n-1), ys=v=>h-p-(h-2*p)*(v-lo)/(hi-lo);
+  const pts=arr.map((v,i)=>xs(i).toFixed(1)+","+ys(v).toFixed(1)).join(" ");
+  document.getElementById(id).innerHTML=`<polygon points="${xs(0)},${h-p} ${pts} ${xs(n-1)},${h-p}" fill="${color}" opacity=".15"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5"/>`+arr.map((v,i)=>`<circle cx="${xs(i)}" cy="${ys(v)}" r="${i===n-1?4.5:2.5}" fill="${color}"/>`).join("");
+}
 
-// ---------- Channels ----------
+/* ---------- Channels ---------- */
 let channel="case";
 document.getElementById("channels").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
@@ -368,31 +498,30 @@ document.getElementById("channels").addEventListener("click",e=>{
 });
 function setQ(el){document.getElementById("q").value=el.textContent;}
 
-// ---------- Resolve pipeline ----------
+/* ---------- Resolve pipeline ---------- */
 const answers={
-  phone:"I can help right away. This looks like an SSO redirect loop caused by clock skew on the Identity Connector. Let’s resync the server time to an NTP source — I’ll walk you through it now.",
-  case:"Diagnosis: SSO redirect loop on Identity Connector, most likely cause = clock skew (94%).\nResolution: resync the connector host to a reliable NTP source, then retry the sign-in.\nApplicability: Identity Connector 5.x, EU region.",
-  self:"SSO redirect loop after login?\n1. Check the connector host time.\n2. Resync to an NTP source.\n3. Retry sign-in.\nStill stuck? See related: RelayState, cookie expiry.",
-  agent:"{intent:'sso_redirect_loop', cause:'clock_skew', confidence:0.94, fix:'resync_ntp', applies_to:['IdentityConnector 5.x'], sources:['KB1001','case-evidence'], channel:'agent'}"
+ phone:"I can help right away. This looks like an SSO redirect loop caused by clock skew on the Identity Connector. Let’s resync the server time to an NTP source — I’ll walk you through it now.",
+ case:"Diagnosis: SSO redirect loop on Identity Connector, most likely cause = clock skew (94%).\nResolution: resync the connector host to a reliable NTP source, then retry the sign-in.\nApplicability: Identity Connector 5.x, EU region.",
+ self:"SSO redirect loop after login?\n1. Check the connector host time.\n2. Resync to an NTP source.\n3. Retry sign-in.\nStill stuck? See related: RelayState, cookie expiry.",
+ agent:"{intent:'sso_redirect_loop', cause:'clock_skew', confidence:0.94, fix:'resync_ntp', applies_to:['IdentityConnector 5.x'], sources:['KB1001','case-evidence'], channel:'agent'}"
 };
 function step(id,txt,delay){return new Promise(r=>setTimeout(()=>{const s=document.getElementById(id);s.classList.add("on");if(txt)s.querySelector(".body").innerHTML=txt;r();},delay));}
 async function resolve(){
   document.querySelectorAll(".step").forEach(s=>s.classList.remove("on"));
   document.getElementById("flag").classList.remove("show");
   document.getElementById("ans").textContent="—";document.getElementById("cite").textContent="";
-  edges.forEach(()=>{});draw();
+  draw();
   log("Query received on "+channel+" channel","b");
   await step("s1","Intent = <b>sso_redirect_loop</b> (classified by meaning, not keywords) · entities extracted {product, version, region} · enriched with work-context + discovery context",300);
-  // highlight diagnosis path
-  await step("s2","",500);
-  hotPath();
+  /* highlight diagnosis path */
+  await step("s2","",500); hotPath();
   const causes=nodes.filter(n=>n.type==="cause").sort((a,b)=>b.conf-a.conf);
   let html="Ranked causes from graph:";
   causes.forEach(cz=>{html+=`<div class="cause"><span>${cz.label}</span><span style="min-width:90px"><span class="bar" style="width:${Math.round(cz.conf*80)}px;display:inline-block"></span> ${Math.round(cz.conf*100)}%</span></div>`;});
   document.getElementById("b2").innerHTML=html;
   await step("s3","Vector (semantic / cosine) ⊕ Graph subgraph (Symptom→Cause→Fix) ⊕ Keyword/BM25 (error code <b>81002</b>) → fused by reranker (RRF). Assembled: <b>KB1001 v"+ver+"</b> + case evidence + telemetry",700);
   const unverified=document.getElementById("govOff").checked;
-  if(unverified){document.getElementById("flag").classList.add("show");log("Reflection guardrail held a low-confidence claim","r");}
+  if(unverified){document.getElementById("flag").classList.add("show");log("Reflection guardrail held a low-confidence claim","r");audit("Reflection guardrail","Held an unverified claim before it reached the customer");}
   await step("s4","",600);
   renderAnswer();
   log("Resolved · grounded answer delivered on "+channel,"g");
@@ -404,11 +533,10 @@ function renderAnswer(){
 }
 function hotPath(){
   const hot=[["sym","c1"],["c1","d1"],["d1","f1"],["f1","art"]];
-  [...svg.querySelectorAll(".edge")].forEach(l=>{
-    if(hot.find(h=>h[0]===l.dataset.a&&h[1]===l.dataset.b))l.classList.add("hot");
-  });
+  [...svg.querySelectorAll(".edge")].forEach(l=>{ if(hot.find(h=>h[0]===l.dataset.a&&h[1]===l.dataset.b))l.classList.add("hot"); });
 }
-// ---------- Concept trace (Understand & Resolve explainer) ----------
+
+/* ---------- Concept trace (Understand & Resolve explainer) ---------- */
 function traceConcepts(){
   const ids=["cc1","cc2","cc3","cc4","cc5"];
   const qvec=document.getElementById("qvec");qvec.innerHTML="";
@@ -422,13 +550,13 @@ function traceConcepts(){
   log("Concept trace: embed → semantic match → graph traverse → rerank → ground","b");
 }
 
-// ---------- Self-evolving Microsoft Learn article ----------
+/* ---------- Self-evolving Microsoft Learn article ---------- */
 const checklistV1=[
-  "Ensure the Seamless SSO feature is enabled in Microsoft Entra Connect.",
-  "Ensure the Microsoft Entra URL (<code>autologon.microsoftazuread-sso.com</code>) is in the user's Intranet zone.",
-  "Ensure the corporate device is joined to the Active Directory domain and connected to the corporate network.",
-  "Ensure the device's time is synchronized with Active Directory and the domain controllers, and that they are within five minutes of each other.",
-  "Purge existing Kerberos tickets with <code>klist purge</code> and try again."
+ "Ensure the Seamless SSO feature is enabled in Microsoft Entra Connect.",
+ "Ensure the Microsoft Entra URL (<code>autologon.microsoftazuread-sso.com</code>) is in the user's Intranet zone.",
+ "Ensure the corporate device is joined to the Active Directory domain and connected to the corporate network.",
+ "Ensure the device's time is synchronized with Active Directory and the domain controllers, and that they are within five minutes of each other.",
+ "Purge existing Kerberos tickets with <code>klist purge</code> and try again."
 ];
 const insertedStep="<span class=\"ins\"><b>NEW in v2 —</b> If the clocks differ by more than five minutes, resync the connector/member host: run <code>w32tm /resync</code> (or point the PDC emulator to a reliable NTP source), then retry sign-in. Sign-in error codes <code>81002</code> and <code>81008</code> (&ldquo;Unable to validate the user's Kerberos ticket&rdquo;) most commonly map to this clock-skew cause.</span>";
 function renderChecklist(v){
@@ -437,25 +565,142 @@ function renderChecklist(v){
     ul.insertAdjacentHTML("beforeend",`<li>${it}</li>`);
     if(v===2 && i===3){ul.insertAdjacentHTML("beforeend",`<li style="list-style:none;margin-left:-14px">${insertedStep}</li>`);}
   });
-  document.getElementById("docmeta").textContent = v===1 ? "Last updated: 2025-04-09 · Version 1" : "Last updated: 2026-06-25 · Version 2 (regenerated from customer signal)";
+  document.getElementById("docmeta").textContent = v===1 ? "Last updated: 2025-04-09 · Version 1" : "Last updated: 2026-06-25 · Version 2 (regenerated from customer signal · "+(kbApprovedBy||"routing policy")+")";
   document.getElementById("vt1").classList.toggle("on",v===1);
   document.getElementById("vt2").classList.toggle("on",v===2);
 }
 function showVer(v){renderChecklist(v);}
+let kbPublished=false, kbApprovedBy="";
 function regen(){
+  if(kbPublished){renderChecklist(2);log("KB1001 v2 is already published · showing current version","g");return;}
+  if(queue.find(q=>q.id==="G1")){log("KB1001 draft is already waiting in the expert review queue","a");return;}
   log("Case & Telemetry Miner: 312 queries this month match intent 'sso_redirect_loop' · cause = clock skew","b");
   setTimeout(()=>log("Gap detected: checklist lacks a remediation step for time resync → drafting v2","a"),600);
-  setTimeout(()=>{renderChecklist(2);log("Auto-validated (reflection + provenance) · KB1001 → v2 published · answer accuracy ↑","g");bumpCoverage();},1300);
+  setTimeout(()=>{log("Self-validated (reflection + provenance) · confidence 93% · risk low → applying routing policy","b");routeDraft(GAPS[0]);},1300);
 }
 document.getElementById("changelog").innerHTML=
-  `<div><span class="k">Signal</span> · 312 community + case queries this month matched intent <b>sso_redirect_loop</b> where the diagnosed cause was clock skew.</div>
-   <div style="margin-top:6px"><span class="k">Gap detected</span> · the checklist said to <i>ensure</i> time sync but gave no <i>remediation</i> step → 27% of those customers re-contacted.</div>
-   <div style="margin-top:6px"><span class="k">Action</span> · Case &amp; Telemetry Miner + Community Crawler flag the gap → auto-draft the new step → reflection + provenance check → auto-publish as v2.</div>
-   <div style="margin-top:6px"><span class="k">Result</span> · Gap Rate for this topic ↓ · first-contact resolution ↑ · graph node KB1001 → v2, confidence for &lsquo;Clock skew&rsquo; ↑ to 94%.</div>`;
+ `<div><span class="k">Signal</span> · 312 community + case queries this month matched intent <b>sso_redirect_loop</b> where the diagnosed cause was clock skew.</div>
+ <div style="margin-top:6px"><span class="k">Gap detected</span> · the checklist said to <i>ensure</i> time sync but gave no <i>remediation</i> step → 27% of those customers re-contacted.</div>
+ <div style="margin-top:6px"><span class="k">Action</span> · Case &amp; Telemetry Miner + Community Crawler flag the gap → draft the new step → reflection + provenance check → <b>routing policy</b>: auto-publish if confidence ≥ threshold and risk is low, otherwise expert review → publish as v2.</div>
+ <div style="margin-top:6px"><span class="k">Result</span> · Gap Rate for this topic ↓ · first-contact resolution ↑ · re-contacts ↓ · graph node KB1001 → v2, confidence for &lsquo;Clock skew&rsquo; ↑ to 94%.</div>`;
 document.getElementById("ansBefore").innerHTML='<div style="font-size:12px;color:#f0b7b0;margin-top:6px"><b>v1 answer:</b> &ldquo;Ensure your device time is synchronized with Active Directory (within five minutes).&rdquo; <i>— customer doesn&rsquo;t know how to resync → re-contacts.</i></div>';
 document.getElementById("ansAfter").innerHTML='<div style="font-size:12px;color:#7fd0b8;margin-top:8px"><b>v2 answer:</b> &ldquo;Your redirect loop matches clock skew (error 81002). Run <code style="color:#8fd0ff;background:#0b1420;border-radius:4px;padding:1px 4px">w32tm /resync</code> on the connector host to resync time to your NTP source, then retry sign-in.&rdquo; <i>— resolved on first contact · traceable to KB1001 v2.</i></div>';
 renderChecklist(1);
 
+/* ---------- NEW: Human-in-the-loop governance ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const GAPS=[
+ {id:"G1",art:"KB1001",title:"KB1001 says “ensure time sync” but gives no remediation step",conf:93,risk:"low",why:"procedural step, no security or entitlement impact",
+  del:"Ensure the device's time is synchronized … within five minutes of each other.",add:"If clocks differ by more than five minutes, run w32tm /resync on the connector host, then retry sign-in.",f:6,r:4},
+ {id:"G2",art:"KB1002",title:"MFA article doesn't mention token lifetime policy as a cause",conf:86,risk:"high",why:"changes security policy guidance",
+  del:"Contact your administrator if prompts continue.",add:"Review the session token lifetime policy; set sign-in frequency to your organization's standard.",f:4,r:3},
+ {id:"G3",art:"KB1003",title:"App sign-in article has no workaround for customers who can't update yet",conf:81,risk:"low",why:"workaround text only",
+  del:"",add:"If the update can't be installed yet, use web sign-in as a workaround; web sign-in isn't affected.",f:3,r:2}
+];
+let queue=[], auditLog=[], handled={};
+function now(){return new Date().toLocaleTimeString();}
+function audit(who,what){auditLog.unshift(`${now()} · <b>${esc(who)}</b> · ${esc(what)}`);document.getElementById("audit").innerHTML=auditLog.map(a=>`<div>${a}</div>`).join("");}
+function thr(){return +document.getElementById("thr").value;}
+function routeDraft(g){
+  handled[g.id]=true;
+  const reasons=[]; if(g.conf<thr())reasons.push(`confidence ${g.conf}% is below the ${thr()}% threshold`); if(g.risk!=="low")reasons.push(`high risk: ${g.why}`);
+  if(!reasons.length){ publish(g,"Auto-published",`confidence ${g.conf}% ≥ ${thr()}%, low risk (${g.why})`); }
+  else { queue.push(Object.assign({},g,{reasons:reasons.join("; ")})); audit("Routing policy",`${g.art} draft sent to expert review: ${reasons.join("; ")}`); log(`Routing policy: ${g.art} draft → expert review (${reasons.join("; ")})`,"a"); renderQueue(); }
+  renderGapsLeft();
+}
+function publish(g,who,why){
+  if(who==="Auto-published")pubAuto++; else pubHum++;
+  boostF+=g.f; boostR+=g.r;
+  if(g.id==="G1"){ kbPublished=true; kbApprovedBy=who==="Auto-published"?"auto-published":"expert-approved"; ver=Math.max(ver,2);
+    const art=nodes.find(n=>n.id==="art");art.label="KB1001 v"+ver;art._new=true;
+    const c1=nodes.find(n=>n.id==="c1");c1.conf=Math.max(c1.conf,.94);c1._new=true; draw(); renderChecklist(2); }
+  else { addNode({id:"n"+g.id,label:g.art+" v2",x:g.id==="G2"?560:470,y:g.id==="G2"?450:470,type:"art"},"prod"); }
+  audit(who,`${g.art} → v2 · ${why}`);
+  log(`Published ${g.art} v2 (${who.toLowerCase()}) · first-contact resolution ↑ · re-contacts ↓`,"g");
+  bumpCoverage(); renderPhase3();
+}
+function renderQueue(){
+  document.getElementById("qcount").textContent=queue.length+" pending";
+  const el=document.getElementById("queue");
+  if(!queue.length){el.innerHTML='<div class="empty">Nothing waiting. Drafts that need an expert appear here.</div>';return;}
+  el.innerHTML=queue.map((q,i)=>`<div class="qitem"><b>${esc(q.title)}</b>
+   <div class="qmeta"><span class="tag">${q.art}</span><span class="tag ${q.conf>=90?"good":"warn"}">confidence ${q.conf}%</span><span class="tag ${q.risk==="low"?"good":"bad"}">risk: ${q.risk}</span><span class="tag">sources: cases · community · telemetry</span></div>
+   <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">Why it's here: ${esc(q.reasons)}</div>
+   <div class="diff">${q.del?`<span class="del">${esc(q.del)}</span>`:""}<span class="add">＋ ${esc(q.add)}</span></div>
+   <div class="qbtns"><button class="btn teal" data-act="qApprove" data-i="${i}">Approve &amp; publish</button><button class="btn sec" data-act="qEdit" data-i="${i}">Edit, then publish</button><button class="btn bad" data-act="qReject" data-i="${i}">Reject</button></div></div>`).join("");
+}
+function qAction(kind,i){
+  const q=queue.splice(i,1)[0]; if(!q)return; renderQueue();
+  if(kind==="reject"){ handled[q.id]=false; audit("SME (you)",`Rejected ${q.art} draft · feedback sent to drafting agent`); log(`SME rejected the ${q.art} draft · agent will gather more evidence`,"r"); renderGapsLeft(); return; }
+  publish(q,"SME (you)",kind==="edit"?"edited wording, then approved":"approved as drafted");
+}
+function detectGap(){
+  const g=GAPS.find(x=>!handled[x.id] && !(x.id==="G1"&&kbPublished));
+  if(!g){log("No new gaps detected · coverage is current for these intents","g");return;}
+  log(`Gap detected · ${g.title}`,"a");
+  setTimeout(()=>{log(`Draft self-validated (reflection + provenance) · confidence ${g.conf}% · risk ${g.risk}`,"b");routeDraft(g);},600);
+}
+function renderGapsLeft(){const left=GAPS.filter(x=>!handled[x.id]&&!(x.id==="G1"&&kbPublished)).length;document.getElementById("gapsLeft").textContent=left?`${left} signal-driven gap${left>1?"s":""} waiting to be found`:"All known gaps addressed";}
+document.getElementById("thr").addEventListener("input",()=>{document.getElementById("thrv").textContent=thr()+"%";});
+
+/* ---------- NEW: Business value ---------- */
+function renderValue(){
+  const c=+document.getElementById("vc").value||0,cost=+document.getElementById("vcost").value||0,aht=+document.getElementById("vaht").value||0;
+  const avoided=c*(BASE.rec-recNow())/100;
+  const money=v=>"$"+Math.round(v).toLocaleString();
+  document.getElementById("vo1").textContent=Math.round(avoided).toLocaleString();
+  document.getElementById("vo2").textContent=Math.round(avoided*aht/60).toLocaleString();
+  document.getElementById("vo3").textContent=money(avoided*cost);
+  document.getElementById("vo4").textContent=money(avoided*cost*12);
+  document.getElementById("vnote").textContent=`Re-contact rate ${BASE.rec}% at baseline → ${recNow()}% now. Re-contacts avoided = monthly contacts × drop in re-contact rate; hours = avoided × handle time. Illustrative model; it doesn't yet count deflection to self-serve or AI-agent containment.`+(recNow()===BASE.rec?" Run the fleet or publish an improvement to see value accrue.":"");
+}
+["vc","vcost","vaht"].forEach(id=>document.getElementById(id).addEventListener("input",renderValue));
+
+/* ---------- NEW: Path to Phase 3 ---------- */
+let connectedDone=false;
+function renderPhase3(){
+  const c1=nodes.find(n=>n.id==="c1");
+  const p=[`<li>SSO clock skew · ${Math.round(c1.conf*100)}% confidence · suggest an in-product time-sync warning</li>`,"<li>MFA prompt repeats · linked to token lifetime defaults · suggest a safer default</li>"];
+  if(relCount)p.unshift(`<li><b>Release 5.4</b> · ${relCount} change${relCount>1?"s":""} mapped to impacted content · watch for regressions</li>`);
+  document.getElementById("dProdL").innerHTML=p.join("");
+  const cs=[`<li>${relCount?"148 accounts on Release 5.4 · proactive notice drafted, held for CSM approval":"Accounts on upcoming releases · populated when a release is ingested"}</li>`,"<li>37 tenants on a short token lifetime policy · candidates for outreach</li>"];
+  document.getElementById("dCsL").innerHTML=cs.join("");
+  const ct=[]; if(kbPublished)ct.push("<li>KB1001 v2 · queue localization for 11 languages</li>");
+  GAPS.slice(1).forEach(g=>{if(nodes.find(n=>n.id==="n"+g.id))ct.push(`<li>${g.art} v2 · queue localization for 11 languages</li>`);});
+  if(!ct.length)ct.push("<li>No updated articles yet · publish one to see follow-on work</li>");
+  document.getElementById("dCntL").innerHTML=ct.join("");
+}
+function connectedEvent(){
+  ["dProd","dCs","dCnt"].forEach(id=>document.getElementById(id).classList.remove("lit"));
+  const ev=document.getElementById("event");
+  ev.innerHTML=`<div class="event"><b>Event</b> · Release 5.4 rolled back in one region <i>and</i> 37 tenants moved to a stricter session policy <i>and</i> community questions about MFA prompts up 2.1×</div><div class="event"><b>One connected response</b> (instead of three separate escalations)<ol id="evol"></ol></div>`;
+  const steps=[[null,"Graph links all three signals to one symptom cluster: <b>MFA prompt repeats</b>"],
+   ["dProd","Product engineering: regression ticket opened with 3 evidence links and a customer-impact estimate"],
+   ["dCs","Customer success: 37 affected accounts identified; proactive notice drafted and <b>held for CSM approval</b>"],
+   ["dCnt","Content: MFA article update drafted and routed to <b>expert review</b> (security policy, high risk)"],
+   [null,"Support: resolve flow re-weighted, so new MFA questions get the rollback-aware answer immediately"]];
+  steps.forEach(([d,t],i)=>setTimeout(()=>{if(d)document.getElementById(d).classList.add("lit");document.getElementById("evol").insertAdjacentHTML("beforeend",`<li>${t}</li>`);},(i+1)*600));
+  setTimeout(()=>{
+    if(!connectedDone){connectedDone=true;
+      queue.push({id:"G4",art:"KB1002",title:"MFA article: add note on the regional Release 5.4 rollback and stricter session policy",conf:84,risk:"high",why:"security policy guidance",reasons:"high risk: security policy guidance; confidence 84% below threshold",del:"",add:"If prompts started after the regional rollback of Release 5.4, check whether your tenant moved to the stricter session policy.",f:3,r:2});
+      renderQueue(); audit("Connected event","Dispatched to product, customer success and content in one step · 2 actions held for human approval");}
+    log("Connected event handled across 4 teams from one graph update · human approval held where risk is high","g");
+  },steps.length*600+300);
+}
+
+/* ---------- Wiring (replaces inline handlers; same behavior) ---------- */
+const ACT={runFleet,ingestCommunity,ingestRelease,ingestEvidence,resolve,traceConcepts,regen,detectGap,connectedEvent};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]"); if(!b)return;
+  const a=b.dataset.act;
+  if(a==="setQ")return setQ(b);
+  if(a==="showVer")return showVer(+b.dataset.v);
+  if(a==="qApprove")return qAction("approve",+b.dataset.i);
+  if(a==="qEdit")return qAction("edit",+b.dataset.i);
+  if(a==="qReject")return qAction("reject",+b.dataset.i);
+  if(ACT[a])ACT[a]();
+});
+renderOutcomes(); renderPhase3(); renderGapsLeft();
 log("System ready · graph loaded with baseline scenario","g");
 </script>
 </body>
